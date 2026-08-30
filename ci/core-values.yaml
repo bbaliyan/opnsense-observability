@@ -1,0 +1,13 @@
+opnsenseExporter:
+  opnsense:
+    protocol: http
+    address: "127.0.0.1"
+    instanceLabel: "ci-dummy"
+    insecureSkipVerify: true
+    apiKeySecretRef: {name: "ci-dummy-secret", key: "api-key"}
+    apiSecretSecretRef: {name: "ci-dummy-secret", key: "api-secret"}
+
+blackboxExporter:
+  wanGatewayAddress: "10.0.0.1"
+
+extraObjects: []
