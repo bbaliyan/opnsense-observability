@@ -1,0 +1,9 @@
+.git/
+.github/
+.gitignore
+.superpowers/
+docs/
+tests/
+ci/
+examples/
+*.orig

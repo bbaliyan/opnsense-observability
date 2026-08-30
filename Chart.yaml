@@ -4,9 +4,9 @@ description: Kubernetes-native OPNsense monitoring — system health, firmware-u
 type: application
 version: 0.1.0-alpha.1
 appVersion: "0.1.0"
-home: https://github.com/OWNER/opnsense-observability
+home: https://github.com/bbaliyan/opnsense-observability
 sources:
-  - https://github.com/OWNER/opnsense-observability
+  - https://github.com/bbaliyan/opnsense-observability
 keywords:
   - opnsense
   - networking
