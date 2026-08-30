@@ -3,9 +3,11 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   # Job pod templates are immutable, so a plain fixed name would make any
-  # future helm upgrade that touches this pod spec fail outright. Suffixing
-  # with the release revision creates a fresh Job each upgrade instead.
-  name: {{ include "opnsense-observability.fullname" . }}-geoip-init-{{ .Release.Revision }}
+  # future upgrade that touches this pod spec fail outright. Suffixing with
+  # a hash of the chart version (not .Release.Revision, which is always "1"
+  # under `helm template`-based GitOps tools like ArgoCD) creates a fresh
+  # Job only when this template could actually have changed.
+  name: {{ include "opnsense-observability.fullname" . }}-geoip-init-{{ .Chart.Version | sha256sum | trunc 8 }}
   labels:
     {{- include "opnsense-observability.labels" . | nindent 4 }}
     app.kubernetes.io/component: geoip

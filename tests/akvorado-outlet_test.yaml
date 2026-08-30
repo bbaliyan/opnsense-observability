@@ -37,3 +37,9 @@ tests:
       - equal:
           path: spec.ports[0].port
           value: 8080
+  - it: uses Recreate strategy to avoid deadlocking on the RWO GeoIP PVC
+    template: akvorado/outlet-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: Recreate

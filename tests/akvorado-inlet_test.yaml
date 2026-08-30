@@ -46,3 +46,13 @@ tests:
       - equal:
           path: spec.externalTrafficPolicy
           value: Local
+  - it: omits externalTrafficPolicy for ClusterIP, which rejects the field
+    template: akvorado/inlet-service.yaml
+    set:
+      akvorado.netflow.serviceType: ClusterIP
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - notExists:
+          path: spec.externalTrafficPolicy

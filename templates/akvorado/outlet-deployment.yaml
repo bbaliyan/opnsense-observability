@@ -8,6 +8,11 @@ metadata:
     app.kubernetes.io/component: akvorado-outlet
 spec:
   replicas: 1
+  # RollingUpdate would schedule the replacement pod before terminating the
+  # current one; with a single replica sharing the ReadWriteOnce GeoIP PVC
+  # across nodes, that can deadlock on a multi-attach error.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "opnsense-observability.selectorLabels" . | nindent 6 }}
