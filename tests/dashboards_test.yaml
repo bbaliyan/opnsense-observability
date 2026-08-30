@@ -1,0 +1,23 @@
+suite: dashboard ConfigMaps
+templates:
+  - dashboards/connectivity-dashboard.yaml
+  - dashboards/opnsense-health-dashboard.yaml
+tests:
+  - it: renders the connectivity dashboard ConfigMap with the sidecar label
+    template: dashboards/connectivity-dashboard.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.labels.grafana_dashboard
+          value: "1"
+      - matchRegex:
+          path: data["connectivity.json"]
+          pattern: "state-timeline"
+  - it: renders nothing when dashboards are disabled
+    template: dashboards/connectivity-dashboard.yaml
+    set:
+      dashboards.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

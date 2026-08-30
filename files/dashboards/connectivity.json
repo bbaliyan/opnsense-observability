@@ -1,0 +1,94 @@
+{
+  "title": "OPNsense / Connectivity",
+  "uid": "opnsense-connectivity",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "browser",
+  "time": {"from": "now-6h", "to": "now"},
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "state-timeline",
+      "title": "Connectivity — cluster vantage point",
+      "gridPos": {"h": 6, "w": 24, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "expr": "probe_success{job=\"opnsense-connectivity-cluster\"}",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"type": "value", "options": {"0": {"text": "down", "color": "red"}}},
+            {"type": "value", "options": {"1": {"text": "up", "color": "green"}}}
+          ]
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "state-timeline",
+      "title": "Connectivity — OPNsense vantage point",
+      "gridPos": {"h": 6, "w": 24, "x": 0, "y": 6},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "expr": "opnsense_gateways_status{name=~\"MONITOR_CLOUDFLARE|MONITOR_GOOGLE\"}",
+          "legendFormat": "{{name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {"type": "value", "options": {"0": {"text": "down", "color": "red"}}},
+            {"type": "value", "options": {"1": {"text": "up", "color": "green"}}}
+          ]
+        }
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Latency (RTT, ms)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "expr": "probe_duration_seconds{job=\"opnsense-connectivity-cluster\"} * 1000",
+          "legendFormat": "cluster / {{instance}}"
+        },
+        {
+          "expr": "opnsense_gateways_rtt_milliseconds{name=~\"MONITOR_CLOUDFLARE|MONITOR_GOOGLE\"}",
+          "legendFormat": "opnsense / {{name}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Jitter (RTTd, ms) — OPNsense vantage point",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {
+          "expr": "opnsense_gateways_rttd_milliseconds{name=~\"MONITOR_CLOUDFLARE|MONITOR_GOOGLE\"}",
+          "legendFormat": "{{name}}"
+        }
+      ]
+    }
+  ]
+}

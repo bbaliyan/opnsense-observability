@@ -1,0 +1,128 @@
+{
+  "title": "OPNsense / Health",
+  "uid": "opnsense-health",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "browser",
+  "time": {"from": "now-6h", "to": "now"},
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Firmware update available",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {"expr": "opnsense_firmware_new_packages", "legendFormat": "new packages"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "orange", "value": 1}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "CPU (idle %)",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {"expr": "avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100"}
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Memory available",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {"expr": "node_memory_MemAvailable_bytes"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "bytes"}}
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Disk available (root)",
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {"expr": "node_filesystem_avail_bytes{mountpoint=\"/\"}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "bytes"}}
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Network throughput (WAN)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {"expr": "rate(node_network_receive_bytes_total[5m]) * 8", "legendFormat": "{{device}} rx"},
+        {"expr": "rate(node_network_transmit_bytes_total[5m]) * 8", "legendFormat": "{{device}} tx"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "bps"}}
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Services",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {"expr": "opnsense_services_status", "format": "table", "instant": true}
+      ]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Unbound — DNSSEC secure answers",
+      "gridPos": {"h": 4, "w": 12, "x": 0, "y": 12},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {"expr": "opnsense_unbound_dns_answer_secure_total"}
+      ]
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Unbound — DNSSEC bogus answers",
+      "gridPos": {"h": 4, "w": 12, "x": 12, "y": 12},
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "targets": [
+        {"expr": "opnsense_unbound_dns_answer_bogus_total"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "red", "value": 1}
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
