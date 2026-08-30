@@ -1,6 +1,9 @@
 chart-dirs:
   - .
+charts:
+  - .
 chart-repos:
   - prometheus-community=https://prometheus-community.github.io/helm-charts
 helm-extra-args: --timeout 300s
 target-branch: main
+validate-maintainers: false
