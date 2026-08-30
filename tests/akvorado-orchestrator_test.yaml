@@ -1,0 +1,38 @@
+suite: akvorado orchestrator
+templates:
+  - akvorado/orchestrator-deployment.yaml
+  - akvorado/orchestrator-service.yaml
+  - akvorado/orchestrator-servicemonitor.yaml
+set:
+  akvorado.enabled: true
+tests:
+  - it: renders nothing when akvorado is disabled
+    template: akvorado/orchestrator-deployment.yaml
+    set:
+      akvorado.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: runs the orchestrator command against the mounted config
+    template: akvorado/orchestrator-deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].command
+          value: ["akvorado", "orchestrator", "/etc/akvorado/akvorado.yaml"]
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/akvorado/akvorado:v2026.8.1
+  - it: exposes port 8080 on the Service
+    template: akvorado/orchestrator-service.yaml
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 8080
+  - it: renders a ServiceMonitor scraping /api/v0/orchestrator/metrics
+    template: akvorado/orchestrator-servicemonitor.yaml
+    asserts:
+      - equal:
+          path: spec.endpoints[0].path
+          value: /api/v0/orchestrator/metrics
