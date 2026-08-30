@@ -11,7 +11,14 @@ data:
     #!/bin/sh
     set -eu
     CUR_MONTH=$(date -u +%Y-%m)
-    PREV_MONTH=$(date -u -d "$(date -u +%Y-%m-01) -1 day" +%Y-%m)
+    # busybox date (curlimages/curl) has no "-d <date> -1 day" relative offsets, so compute prev month via arithmetic
+    Y=$(date -u +%Y)
+    M=$(date -u +%-m)
+    if [ "$M" = "1" ]; then
+      PREV_MONTH=$(printf '%04d-%02d' "$((Y - 1))" 12)
+    else
+      PREV_MONTH=$(printf '%04d-%02d' "$Y" "$((M - 1))")
+    fi
     for db in country asn; do
       case "$db" in
         country) out=dbip-country-lite.mmdb ;;
