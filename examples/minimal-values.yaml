@@ -1,0 +1,18 @@
+# Minimal install: opnsense-exporter + blackbox-exporter + connectivity/
+# health dashboards + core alerts. No Akvorado, no EveBox.
+opnsenseExporter:
+  opnsense:
+    protocol: https
+    address: "192.168.1.1"
+    instanceLabel: "opnsense-prod"
+    apiKeySecretRef: {name: "opnsense-observability-opnsense-api", key: "api-key"}
+    apiSecretSecretRef: {name: "opnsense-observability-opnsense-api", key: "api-secret"}
+
+blackboxExporter:
+  wanGatewayAddress: "203.0.113.1"    # replace with your actual WAN gateway
+  probeSelectorLabels:
+    release: kube-prometheus-stack     # match your cluster's Prometheus probeSelector
+
+serviceMonitor:
+  labels:
+    release: kube-prometheus-stack     # match your cluster's Prometheus serviceMonitorSelector
