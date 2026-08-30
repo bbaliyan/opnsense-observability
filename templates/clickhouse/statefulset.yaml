@@ -19,10 +19,22 @@ spec:
         {{- include "opnsense-observability.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: clickhouse
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        fsGroup: 101
       containers:
         - name: clickhouse
           image: "{{ .Values.akvorado.clickhouse.image.repository }}:{{ .Values.akvorado.clickhouse.image.tag }}"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           env:
+            # The default ClickHouse user is unauthenticated (network access
+            # only opens up with CLICKHOUSE_PASSWORD set) - acceptable here
+            # since this Service is a plain ClusterIP, never exposed outside
+            # the cluster.
             - name: CLICKHOUSE_SKIP_USER_SETUP
               value: "1"
           ports:

@@ -48,8 +48,9 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
-  - it: renders AkvoradoPipelineLag when enabled
+  - it: renders AkvoradoPipelineLag when akvorado and the alert are both enabled
     set:
+      akvorado.enabled: true
       alerts.akvoradoPipelineLag.enabled: true
     asserts:
       - equal:
@@ -58,6 +59,14 @@ tests:
   - it: omits AkvoradoPipelineLag when disabled
     set:
       alerts.akvoradoPipelineLag.enabled: false
+    asserts:
+      - lengthEqual:
+          path: spec.groups[0].rules
+          count: 5
+  - it: omits AkvoradoPipelineLag when akvorado is disabled even if the alert itself is enabled
+    set:
+      akvorado.enabled: false
+      alerts.akvoradoPipelineLag.enabled: true
     asserts:
       - lengthEqual:
           path: spec.groups[0].rules

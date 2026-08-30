@@ -36,7 +36,14 @@ monitor-only dpinger gateways).
 5. The Akvorado console and traffic dashboard need a Grafana ClickHouse
    datasource pointed at the `<release>-clickhouse` Service (port `9000`)
    — this chart does not provision Grafana datasources (see Non-goals),
-   so add one via your Grafana provisioning of choice.
+   so add one via your Grafana provisioning of choice. ClickHouse's default
+   user has no password — acceptable since the Service is a plain
+   ClusterIP never exposed outside the cluster, but worth knowing before
+   running this chart on a shared/multi-tenant cluster.
+6. The inlet's NetFlow Service uses `externalTrafficPolicy: Local` to
+   preserve OPNsense's real source IP (Akvorado attributes flows by
+   source address). This requires a `LoadBalancer` implementation that
+   preserves client IPs — true for MetalLB and most cloud load balancers.
 
 ## Values reference
 
@@ -51,6 +58,7 @@ monitor-only dpinger gateways).
 | `akvorado.enabled` | Turn on the NetFlow traffic-analytics pipeline (Redpanda + ClickHouse + Akvorado orchestrator/inlet/outlet/console). Default `false`. |
 | `akvorado.netflow.serviceType` | Service type for the inlet's NetFlow listener; typically `LoadBalancer` so OPNsense on the LAN can reach it. |
 | `akvorado.geoip.enabled` | Auto-download DB-IP Lite GeoIP databases via an in-chart CronJob. |
+| `akvorado.kafka.brokers` | External Kafka broker list; empty (default) uses the bundled Redpanda's internal listener. |
 | `akvorado.clickhouse.persistence.size` | PVC size for the vendored single-node ClickHouse StatefulSet. |
 | `akvorado.console.ingress.enabled` | Expose the Akvorado console via Ingress. |
 | `extraObjects` | Escape hatch for arbitrary extra manifests rendered alongside this chart (see below). |

@@ -39,12 +39,20 @@ tests:
       - matchRegex:
           path: data["download.sh"]
           pattern: "dbip-asn-lite.mmdb"
-  - it: the init Job carries post-install/post-upgrade hook annotations
+  - it: the init Job runs as a normal resource, not a Helm hook
+    template: geoip/job.yaml
+    asserts:
+      - notExists:
+          path: metadata.annotations
+  - it: the init Job requires scheduling onto the outlet's node
     template: geoip/job.yaml
     asserts:
       - equal:
-          path: metadata.annotations["helm.sh/hook"]
-          value: post-install,post-upgrade
+          path: spec.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchLabels["app.kubernetes.io/component"]
+          value: akvorado-outlet
+      - equal:
+          path: spec.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].topologyKey
+          value: kubernetes.io/hostname
   - it: the CronJob uses the configured schedule
     template: geoip/cronjob.yaml
     set:
@@ -53,3 +61,21 @@ tests:
       - equal:
           path: spec.schedule
           value: "0 6 1 * *"
+  - it: the CronJob requires scheduling onto the outlet's node
+    template: geoip/cronjob.yaml
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.affinity.podAffinity.requiredDuringSchedulingIgnoredDuringExecution[0].labelSelector.matchLabels["app.kubernetes.io/component"]
+          value: akvorado-outlet
+  - it: fails to render when an unsupported geoip source is set
+    template: geoip/configmap.yaml
+    set:
+      akvorado.geoip.source: maxmind
+    asserts:
+      - failedTemplate:
+          errorMessage: "only dbip-lite is currently supported for akvorado.geoip.source"
+  - it: renders normally with the default dbip-lite source
+    template: geoip/configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap

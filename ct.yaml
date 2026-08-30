@@ -4,6 +4,7 @@ charts:
   - .
 chart-repos:
   - prometheus-community=https://prometheus-community.github.io/helm-charts
+  - redpanda=https://charts.redpanda.com
 helm-extra-args: --timeout 300s
 target-branch: main
 validate-maintainers: false

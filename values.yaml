@@ -120,9 +120,11 @@ akvorado:
       host: ""
       tls: []
       annotations: {}
+  # Shared across orchestrator/inlet/outlet/console. The outlet needs the
+  # most headroom - it loads the GeoIP .mmdb databases (~20MB) into memory.
   resources:
-    requests: {cpu: 50m, memory: 64Mi}
-    limits: {memory: 256Mi}
+    requests: {cpu: 50m, memory: 128Mi}
+    limits: {memory: 1Gi}
 
 # Passthrough values for the redpanda subchart. Single-node by default —
 # this chart targets one homelab firewall's flow volume, not a production
@@ -134,4 +136,9 @@ redpanda:
     persistentVolume:
       size: 10Gi
   console:
+    enabled: false
+  # Akvorado dials Kafka in plaintext (no kafka.tls block in its config) and
+  # this chart doesn't bundle cert-manager, which the redpanda chart's
+  # default TLS listener requires.
+  tls:
     enabled: false

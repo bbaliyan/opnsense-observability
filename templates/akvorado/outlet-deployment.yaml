@@ -22,6 +22,10 @@ spec:
         - name: outlet
           image: "{{ .Values.akvorado.image.repository }}:{{ .Values.akvorado.image.tag }}"
           imagePullPolicy: {{ .Values.akvorado.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           command:
             - akvorado
             - outlet

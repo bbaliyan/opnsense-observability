@@ -8,6 +8,7 @@ metadata:
     app.kubernetes.io/component: akvorado-inlet
 spec:
   type: {{ .Values.akvorado.netflow.serviceType }}
+  externalTrafficPolicy: Local
   selector:
     {{- include "opnsense-observability.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: akvorado-inlet

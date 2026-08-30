@@ -22,6 +22,10 @@ spec:
         - name: console
           image: "{{ .Values.akvorado.image.repository }}:{{ .Values.akvorado.image.tag }}"
           imagePullPolicy: {{ .Values.akvorado.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           command:
             - akvorado
             - console
@@ -50,6 +54,8 @@ spec:
           resources:
             {{- toYaml .Values.akvorado.resources | nindent 12 }}
       volumes:
+        # Console state is disposable in this chart's scope - saved filters
+        # don't need to survive a pod restart.
         - name: state
           emptyDir: {}
 {{- end }}

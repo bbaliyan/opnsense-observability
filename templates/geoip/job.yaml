@@ -2,27 +2,43 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "opnsense-observability.fullname" . }}-geoip-init
+  # Job pod templates are immutable, so a plain fixed name would make any
+  # future helm upgrade that touches this pod spec fail outright. Suffixing
+  # with the release revision creates a fresh Job each upgrade instead.
+  name: {{ include "opnsense-observability.fullname" . }}-geoip-init-{{ .Release.Revision }}
   labels:
     {{- include "opnsense-observability.labels" . | nindent 4 }}
     app.kubernetes.io/component: geoip
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "-5"
-    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: 3600
   template:
     metadata:
       labels:
         {{- include "opnsense-observability.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: geoip
     spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  {{- include "opnsense-observability.selectorLabels" . | nindent 18 }}
+                  app.kubernetes.io/component: akvorado-outlet
+              topologyKey: kubernetes.io/hostname
       restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 100
+        fsGroup: 101
       containers:
         - name: geoip-download
           image: curlimages/curl:8.11.1
           command: ["/bin/sh", "/scripts/download.sh"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             - name: script
               mountPath: /scripts

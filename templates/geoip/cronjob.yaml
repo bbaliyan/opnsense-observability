@@ -17,11 +17,27 @@ spec:
             {{- include "opnsense-observability.selectorLabels" . | nindent 12 }}
             app.kubernetes.io/component: geoip
         spec:
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      {{- include "opnsense-observability.selectorLabels" . | nindent 22 }}
+                      app.kubernetes.io/component: akvorado-outlet
+                  topologyKey: kubernetes.io/hostname
           restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 100
+            fsGroup: 101
           containers:
             - name: geoip-download
               image: curlimages/curl:8.11.1
               command: ["/bin/sh", "/scripts/download.sh"]
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
               volumeMounts:
                 - name: script
                   mountPath: /scripts
