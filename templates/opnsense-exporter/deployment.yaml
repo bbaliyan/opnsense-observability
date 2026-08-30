@@ -24,10 +24,6 @@ spec:
           imagePullPolicy: {{ .Values.opnsenseExporter.image.pullPolicy }}
           args:
             - --opnsense.protocol={{ .Values.opnsenseExporter.opnsense.protocol }}
-            # required: these default to "" in values.yaml, and an unset
-            # address/secret name would otherwise pass helm install/template
-            # cleanly and only fail later with a cryptic Kubernetes API
-            # "Required value" error when the Deployment is rejected.
             - --opnsense.address={{ required "opnsenseExporter.opnsense.address is required" .Values.opnsenseExporter.opnsense.address }}
             - --exporter.instance-label={{ .Values.opnsenseExporter.opnsense.instanceLabel }}
             {{- if .Values.opnsenseExporter.opnsense.insecureSkipVerify }}

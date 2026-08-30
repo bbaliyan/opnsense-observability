@@ -18,8 +18,10 @@
       {
         "name": "instance",
         "type": "query",
+        "label": "Firewall instance",
         "datasource": {"type": "prometheus", "uid": "${datasource}"},
         "query": "label_values(node_exporter_build_info, instance)",
+        "refresh": 1,
         "current": {}
       }
     ]
