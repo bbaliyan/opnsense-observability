@@ -1,0 +1,34 @@
+opnsenseExporter:
+  opnsense:
+    protocol: http
+    address: "127.0.0.1"
+    instanceLabel: "ci-dummy"
+    insecureSkipVerify: true
+    apiKeySecretRef: {name: "ci-dummy-secret", key: "api-key"}
+    apiSecretSecretRef: {name: "ci-dummy-secret", key: "api-secret"}
+
+blackboxExporter:
+  wanGatewayAddress: "10.0.0.1"
+
+akvorado:
+  enabled: true
+  geoip:
+    enabled: false   # no live internet dependency in CI; DB-IP paths are exercised by helm-unittest instead
+  clickhouse:
+    persistence:
+      size: 2Gi
+    resources:
+      requests: {cpu: 100m, memory: 256Mi}
+      limits: {memory: 512Mi}
+
+redpanda:
+  statefulset:
+    replicas: 1
+  resources:
+    cpu:
+      cores: 500m
+    memory:
+      container:
+        max: 1Gi
+
+extraObjects: []

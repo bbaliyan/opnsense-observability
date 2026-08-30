@@ -10,14 +10,53 @@ Full design spec: `docs/superpowers/specs/2026-08-30-opnsense-observability-desi
 ## Status
 
 Core slice (`opnsense-exporter`, `blackbox-exporter`, connectivity/health
-dashboards, alerts) implemented. NetFlow traffic analytics (Akvorado) and
-IDS alert triage (EveBox) land in later releases.
+dashboards, alerts) and NetFlow traffic analytics (Akvorado) implemented.
+IDS alert triage (EveBox) lands in a later release.
 
 ## Prerequisites
 
 See the design spec's §6 for the full, verified OPNsense-side checklist
 (API user/key, `os-node_exporter` plugin, Unbound extended statistics,
 monitor-only dpinger gateways).
+
+### NetFlow traffic analytics (optional — `akvorado.enabled: true`)
+
+1. Install the chart with `akvorado.enabled: true` (see `examples/full-values.yaml`).
+2. Find the `akvorado-inlet` Service's address:
+   `kubectl get svc <release>-akvorado-inlet -o wide`
+3. On OPNsense: **Reporting → Netflow**. Enable capture, select **WAN**
+   (and **LAN** if you also want internal-to-internal visibility), set
+   **Netflow version** to **v9**, and set the target to the inlet Service
+   address from step 2, port `2055`.
+4. GeoIP data (destination-country panel) comes from
+   [DB-IP Lite](https://db-ip.com/db/lite.php) — free, no account or
+   license key, refreshed monthly by an in-chart CronJob. Attribution:
+   this product includes GeoLite2 data created by DB-IP, distributed
+   under the [CC BY 4.0 license](https://creativecommons.org/licenses/by/4.0/).
+5. The Akvorado console and traffic dashboard need a Grafana ClickHouse
+   datasource pointed at the `<release>-clickhouse` Service (port `9000`)
+   — this chart does not provision Grafana datasources (see Non-goals),
+   so add one via your Grafana provisioning of choice.
+
+## Values reference
+
+| Key | Description |
+| --- | --- |
+| `opnsenseExporter.enabled` | Deploy opnsense-exporter, which polls the OPNsense REST API. |
+| `opnsenseExporter.opnsense.address` | OPNsense firewall address (required). |
+| `opnsenseExporter.opnsense.apiKeySecretRef` / `apiSecretSecretRef` | Secret references for the read-only API user/key (see Prerequisites). |
+| `blackboxExporter.enabled` | Deploy blackbox-exporter for cluster-side ICMP probes. |
+| `blackboxExporter.wanGatewayAddress` | OPNsense WAN gateway IP to probe (required). |
+| `blackboxExporter.probeSelectorLabels` | Labels matching the cluster Prometheus's `probeSelector`. |
+| `akvorado.enabled` | Turn on the NetFlow traffic-analytics pipeline (Redpanda + ClickHouse + Akvorado orchestrator/inlet/outlet/console). Default `false`. |
+| `akvorado.netflow.serviceType` | Service type for the inlet's NetFlow listener; typically `LoadBalancer` so OPNsense on the LAN can reach it. |
+| `akvorado.geoip.enabled` | Auto-download DB-IP Lite GeoIP databases via an in-chart CronJob. |
+| `akvorado.clickhouse.persistence.size` | PVC size for the vendored single-node ClickHouse StatefulSet. |
+| `akvorado.console.ingress.enabled` | Expose the Akvorado console via Ingress. |
+| `extraObjects` | Escape hatch for arbitrary extra manifests rendered alongside this chart (see below). |
+
+See `values.yaml` for the full set of keys, including passthrough values for
+the `blackbox-exporter` and `redpanda` subcharts.
 
 ## Reaching os-node_exporter on the firewall
 

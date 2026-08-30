@@ -54,3 +54,13 @@ jobs:
 
       - name: Verify pods are ready
         run: kubectl get pods -o wide && kubectl wait --for=condition=Ready pod --all --timeout=60s
+
+      - name: Install chart with Akvorado enabled
+        run: |
+          helm upgrade opnsense-observability-ci . \
+            -f ci/core-values.yaml \
+            -f ci/full-values.yaml \
+            --wait --timeout 8m
+
+      - name: Verify Akvorado pods are ready
+        run: kubectl get pods -o wide && kubectl wait --for=condition=Ready pod --all --timeout=120s
