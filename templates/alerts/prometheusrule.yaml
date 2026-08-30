@@ -50,4 +50,20 @@ spec:
           annotations:
             summary: "Latency to {{ "{{" }} $labels.name {{ "}}" }} exceeds {{ .Values.alerts.highLatency.thresholdMs }}ms"
         {{- end }}
+        {{- if .Values.alerts.clusterConnectivityLost.enabled }}
+        - alert: ClusterInternetConnectivityLost
+          # Deliberately "ALL targets down", not "any/average target down":
+          # a single flaky probe (e.g. one of 1.1.1.1/8.8.8.8/wan-gateway)
+          # must not page as a full internet outage. Only fire when every
+          # target in the cluster-vantage-point job is failing at once. Do
+          # not weaken this to min-by-instance or an average — that changes
+          # the semantics to "one target down" and defeats the point.
+          expr: count(probe_success{job="opnsense-connectivity-cluster"} == 0) == count(probe_success{job="opnsense-connectivity-cluster"})
+          for: 2m
+          labels:
+            severity: {{ .Values.alerts.clusterConnectivityLost.severity }}
+          annotations:
+            summary: "Cluster-side internet connectivity probe: all targets down"
+            description: "Every target in the cluster-vantage-point blackbox probe (job=opnsense-connectivity-cluster) has failed for at least 2 minutes — this indicates a real loss of internet connectivity, not a single flaky target."
+        {{- end }}
 {{- end }}

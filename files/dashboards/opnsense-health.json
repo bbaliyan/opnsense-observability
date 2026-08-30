@@ -14,6 +14,13 @@
         "type": "datasource",
         "query": "prometheus",
         "current": {}
+      },
+      {
+        "name": "instance",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "${datasource}"},
+        "query": "label_values(node_exporter_build_info, instance)",
+        "current": {}
       }
     ]
   },
@@ -46,7 +53,7 @@
       "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
       "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "targets": [
-        {"expr": "avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100"}
+        {"expr": "avg(rate(node_cpu_seconds_total{instance=\"$instance\",mode=\"idle\"}[5m])) * 100"}
       ]
     },
     {
@@ -56,7 +63,7 @@
       "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
       "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "targets": [
-        {"expr": "node_memory_MemAvailable_bytes"}
+        {"expr": "node_memory_MemAvailable_bytes{instance=\"$instance\"}"}
       ],
       "fieldConfig": {"defaults": {"unit": "bytes"}}
     },
@@ -67,7 +74,7 @@
       "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
       "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "targets": [
-        {"expr": "node_filesystem_avail_bytes{mountpoint=\"/\"}"}
+        {"expr": "node_filesystem_avail_bytes{instance=\"$instance\",mountpoint=\"/\"}"}
       ],
       "fieldConfig": {"defaults": {"unit": "bytes"}}
     },
@@ -78,8 +85,8 @@
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
       "datasource": {"type": "prometheus", "uid": "${datasource}"},
       "targets": [
-        {"expr": "rate(node_network_receive_bytes_total[5m]) * 8", "legendFormat": "{{device}} rx"},
-        {"expr": "rate(node_network_transmit_bytes_total[5m]) * 8", "legendFormat": "{{device}} tx"}
+        {"expr": "rate(node_network_receive_bytes_total{instance=\"$instance\"}[5m]) * 8", "legendFormat": "{{device}} rx"},
+        {"expr": "rate(node_network_transmit_bytes_total{instance=\"$instance\"}[5m]) * 8", "legendFormat": "{{device}} tx"}
       ],
       "fieldConfig": {"defaults": {"unit": "bps"}}
     },

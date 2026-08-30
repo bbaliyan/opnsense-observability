@@ -10,6 +10,13 @@ metadata:
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
+  # The Service always lives in the release namespace, regardless of where
+  # this ServiceMonitor itself is placed (serviceMonitor.namespace above).
+  # Without this, Prometheus Operator defaults to only looking in the
+  # ServiceMonitor's own namespace and silently never finds the Service.
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
   selector:
     matchLabels:
       {{- include "opnsense-observability.selectorLabels" . | nindent 6 }}

@@ -26,6 +26,9 @@ tests:
       - equal:
           path: spec.targets.staticConfig.labels.vantage
           value: cluster
+      - equal:
+          path: spec.prober.url
+          value: RELEASE-NAME-blackbox-exporter.NAMESPACE.svc.cluster.local:9115
   - it: renders nothing when blackboxExporter is disabled
     set:
       blackboxExporter.enabled: false

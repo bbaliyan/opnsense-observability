@@ -13,7 +13,7 @@ spec:
   interval: {{ .Values.blackboxExporter.scrapeInterval }}
   module: icmp
   prober:
-    url: {{ .Release.Name }}-blackbox-exporter:9115
+    url: {{ .Release.Name }}-blackbox-exporter.{{ .Release.Namespace }}.svc.cluster.local:9115
     path: /probe
   targets:
     staticConfig:

@@ -1,0 +1,26 @@
+suite: extraObjects escape hatch
+templates:
+  - extra-objects.yaml
+tests:
+  - it: renders nothing when extraObjects is empty
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders a user-supplied manifest as-is
+    set:
+      extraObjects:
+        - apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: my-extra-configmap
+          data:
+            foo: bar
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: my-extra-configmap
+      - equal:
+          path: data.foo
+          value: bar

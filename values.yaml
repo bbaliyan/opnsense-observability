@@ -1,3 +1,10 @@
+# -- Escape hatch: arbitrary extra Kubernetes manifests to render alongside
+# this chart, e.g. a headless Service + Endpoints so Prometheus can scrape
+# os-node_exporter running on the OPNsense firewall itself (an out-of-cluster
+# target this chart has no built-in way to reach). Each entry is a full
+# manifest (rendered with Helm's tpl, so .Release/.Values are usable inside).
+extraObjects: []
+
 # -- opnsense-exporter: polls the OPNsense REST API for system/service/
 # firmware/gateway status. See README prerequisites for the read-only API
 # user/key this needs.
@@ -63,6 +70,7 @@ alerts:
   gatewayDown: {enabled: true, severity: critical}
   highPacketLoss: {enabled: true, thresholdPercent: 5, severity: warning}
   highLatency: {enabled: true, thresholdMs: 150, severity: warning}
+  clusterConnectivityLost: {enabled: true, severity: critical}
 
 serviceMonitor:
   enabled: true

@@ -56,3 +56,18 @@ tests:
       - equal:
           path: spec.endpoints[0].port
           value: http
+  - it: sets namespaceSelector to the release namespace when serviceMonitor.namespace differs
+    template: opnsense-exporter/servicemonitor.yaml
+    release:
+      namespace: my-release-ns
+    set:
+      serviceMonitor.namespace: "monitoring"
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: metadata.namespace
+          value: monitoring
+      - contains:
+          path: spec.namespaceSelector.matchNames
+          content: my-release-ns

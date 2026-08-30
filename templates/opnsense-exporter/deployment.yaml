@@ -24,7 +24,11 @@ spec:
           imagePullPolicy: {{ .Values.opnsenseExporter.image.pullPolicy }}
           args:
             - --opnsense.protocol={{ .Values.opnsenseExporter.opnsense.protocol }}
-            - --opnsense.address={{ .Values.opnsenseExporter.opnsense.address }}
+            # required: these default to "" in values.yaml, and an unset
+            # address/secret name would otherwise pass helm install/template
+            # cleanly and only fail later with a cryptic Kubernetes API
+            # "Required value" error when the Deployment is rejected.
+            - --opnsense.address={{ required "opnsenseExporter.opnsense.address is required" .Values.opnsenseExporter.opnsense.address }}
             - --exporter.instance-label={{ .Values.opnsenseExporter.opnsense.instanceLabel }}
             {{- if .Values.opnsenseExporter.opnsense.insecureSkipVerify }}
             - --opnsense.insecure
@@ -33,12 +37,12 @@ spec:
             - name: OPNSENSE_EXPORTER_OPS_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.opnsenseExporter.opnsense.apiKeySecretRef.name }}
+                  name: {{ required "opnsenseExporter.opnsense.apiKeySecretRef.name is required" .Values.opnsenseExporter.opnsense.apiKeySecretRef.name }}
                   key: {{ .Values.opnsenseExporter.opnsense.apiKeySecretRef.key }}
             - name: OPNSENSE_EXPORTER_OPS_API_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.opnsenseExporter.opnsense.apiSecretSecretRef.name }}
+                  name: {{ required "opnsenseExporter.opnsense.apiSecretSecretRef.name is required" .Values.opnsenseExporter.opnsense.apiSecretSecretRef.name }}
                   key: {{ .Values.opnsenseExporter.opnsense.apiSecretSecretRef.key }}
           ports:
             - name: http
