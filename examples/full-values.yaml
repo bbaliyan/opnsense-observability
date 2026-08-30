@@ -1,7 +1,8 @@
 # Full install: everything from minimal-values.yaml, plus Akvorado NetFlow
-# traffic analytics (Redpanda + ClickHouse + traffic dashboard). Point
-# OPNsense's NetFlow export at the akvorado-inlet Service this creates —
-# see README prerequisites, step 5.
+# traffic analytics (Redpanda + ClickHouse + traffic dashboard) and EveBox
+# IDS alert triage. Point OPNsense's NetFlow export at the akvorado-inlet
+# Service, and the EveBox Agent at the evebox Service, this creates — see
+# README prerequisites.
 opnsenseExporter:
   opnsense:
     protocol: https
@@ -28,3 +29,10 @@ akvorado:
       enabled: true
       className: nginx
       host: "netflow.home.example"
+
+evebox:
+  enabled: true
+  ingress:
+    enabled: true
+    className: nginx
+    host: "ids.home.example"

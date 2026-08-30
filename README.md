@@ -11,7 +11,7 @@ Full design spec: `docs/superpowers/specs/2026-08-30-opnsense-observability-desi
 
 Core slice (`opnsense-exporter`, `blackbox-exporter`, connectivity/health
 dashboards, alerts) and NetFlow traffic analytics (Akvorado) implemented.
-IDS alert triage (EveBox) lands in a later release.
+IDS alert triage (EveBox) implemented.
 
 ## Prerequisites
 
@@ -50,6 +50,43 @@ monitor-only dpinger gateways).
    the `restricted` Pod Security Standard — only `baseline` or
    `privileged` namespaces work.
 
+### IDS alert triage (optional — `evebox.enabled: true`)
+
+1. Install the chart with `evebox.enabled: true` (see `examples/full-values.yaml`).
+2. On OPNsense: **Services → Intrusion Detection → Administration**, enable
+   **EVE JSON** output (Suricata itself must already be enabled and running
+   — this chart assumes IDS is already turned on, per the design spec's
+   §6 step 6 prior-state note).
+3. Install the [EveBox Agent](https://evebox.org/docs/agent/) on OPNsense.
+   This is a small binary, **not** an OPNsense plugin (no entry in
+   Firmware → Plugins) — the one deliberate exception in this design to
+   "every OPNsense-side piece is a native, already-shipping feature."
+4. Find the `evebox` Service's address:
+   `kubectl get svc <release>-evebox -o wide`
+5. Configure the Agent to tail Suricata's EVE JSON file and ship to that
+   address over plain HTTP, e.g.:
+   ```yaml
+   server:
+     url: http://<release>-evebox.<namespace>.svc.cluster.local:5636
+   input:
+     paths:
+       - "/var/log/suricata/eve.json"
+   ```
+6. EveBox's own authentication is disabled (`--no-auth`) — acceptable
+   since the Service is a plain ClusterIP never exposed outside the
+   cluster by default. If you enable `evebox.ingress`, put an
+   authenticating reverse proxy in front; EveBox does not gate access
+   itself in this configuration.
+7. EveBox runs as root (UID 0) — confirmed against the real
+   `jasonish/evebox` image, which has no non-root user. It will not
+   schedule in a namespace enforcing the `restricted` Pod Security
+   Standard — only `baseline` or `privileged` namespaces work (same
+   caveat as Akvorado, above).
+8. EveBox exposes no Prometheus metrics endpoint — this chart ships no
+   ServiceMonitor or PrometheusRule for it. Alert triage happens in
+   EveBox's own web UI; pod health is covered by the usual
+   Kubernetes-level Deployment status.
+
 ## Values reference
 
 | Key | Description |
@@ -66,6 +103,10 @@ monitor-only dpinger gateways).
 | `akvorado.kafka.brokers` | External Kafka broker list; empty (default) uses the bundled Redpanda's internal listener. |
 | `akvorado.clickhouse.persistence.size` | PVC size for the vendored single-node ClickHouse StatefulSet. |
 | `akvorado.console.ingress.enabled` | Expose the Akvorado console via Ingress. |
+| `evebox.enabled` | Deploy the EveBox server for Suricata IDS alert triage. Default `false`. |
+| `evebox.service.port` | Port the EveBox server listens on and the Agent ships to. |
+| `evebox.persistence.size` | PVC size for EveBox's SQLite data (events + FTS index). |
+| `evebox.ingress.enabled` | Expose the EveBox UI via Ingress. |
 | `extraObjects` | Escape hatch for arbitrary extra manifests rendered alongside this chart (see below). |
 
 See `values.yaml` for the full set of keys, including passthrough values for

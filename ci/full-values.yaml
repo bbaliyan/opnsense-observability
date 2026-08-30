@@ -31,4 +31,12 @@ redpanda:
       container:
         max: 2Gi
 
+evebox:
+  enabled: true
+  persistence:
+    size: 1Gi
+  resources:
+    requests: {cpu: 50m, memory: 128Mi}
+    limits: {memory: 256Mi}
+
 extraObjects: []

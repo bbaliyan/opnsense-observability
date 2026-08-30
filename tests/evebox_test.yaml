@@ -3,6 +3,7 @@ templates:
   - evebox/deployment.yaml
   - evebox/service.yaml
   - evebox/pvc.yaml
+  - evebox/ingress.yaml
 set:
   evebox.enabled: true
 tests:
@@ -75,3 +76,26 @@ tests:
       - equal:
           path: spec.ports[0].targetPort
           value: http
+  - it: renders nothing for the Ingress when ingress is disabled
+    template: evebox/ingress.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders an Ingress with the configured host and class when enabled
+    template: evebox/ingress.yaml
+    set:
+      evebox.ingress.enabled: true
+      evebox.ingress.host: evebox.home.example
+      evebox.ingress.className: nginx
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
+      - equal:
+          path: spec.rules[0].host
+          value: evebox.home.example
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: RELEASE-NAME-opnsense-observability-evebox
