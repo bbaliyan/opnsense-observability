@@ -1,0 +1,71 @@
+{{- if .Values.evebox.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-evebox
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: evebox
+spec:
+  replicas: 1
+  # RollingUpdate would schedule the replacement pod before terminating the
+  # current one; with a single replica sharing the ReadWriteOnce data PVC,
+  # that can deadlock on a multi-attach error (the same failure mode Plan
+  # 2's review found on the Akvorado outlet Deployment).
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "opnsense-observability.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: evebox
+  template:
+    metadata:
+      labels:
+        {{- include "opnsense-observability.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: evebox
+    spec:
+      containers:
+        - name: evebox
+          image: "{{ .Values.evebox.image.repository }}:{{ .Values.evebox.image.tag }}"
+          imagePullPolicy: {{ .Values.evebox.image.pullPolicy }}
+          # No pod-level runAsNonRoot: the upstream image has no non-root
+          # user (uid=0 always) - see Global Constraints.
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          args:
+            - --sqlite
+            - --no-auth
+            - --no-tls
+            - --host
+            - "0.0.0.0"
+            - --port
+            - {{ .Values.evebox.service.port | quote }}
+            - -D
+            - /var/lib/evebox
+          ports:
+            - name: http
+              containerPort: {{ .Values.evebox.service.port }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/evebox
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.evebox.resources | nindent 12 }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "opnsense-observability.fullname" . }}-evebox
+{{- end }}

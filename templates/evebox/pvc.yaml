@@ -1,0 +1,17 @@
+{{- if .Values.evebox.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-evebox
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: evebox
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- with .Values.evebox.persistence.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.evebox.persistence.size }}
+{{- end }}

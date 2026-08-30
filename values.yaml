@@ -126,6 +126,32 @@ akvorado:
     requests: {cpu: 50m, memory: 128Mi}
     limits: {memory: 1Gi}
 
+# EveBox: Suricata IDS alert triage UI, backed by embedded SQLite (no
+# Elasticsearch/Kafka). Off by default. The EveBox Agent runs on OPNsense
+# itself (not part of this chart) and ships Suricata EVE JSON to this
+# Service over plain HTTP — see README prerequisites.
+evebox:
+  enabled: false
+  image:
+    repository: jasonish/evebox
+    tag: "0.28.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5636
+  ingress:
+    enabled: false
+    className: ""
+    host: ""
+    tls: []
+    annotations: {}
+  persistence:
+    size: 5Gi
+    storageClassName: ""
+  resources:
+    requests: {cpu: 50m, memory: 128Mi}
+    limits: {memory: 512Mi}
+
 # Passthrough values for the redpanda subchart. Single-node by default —
 # this chart targets one homelab firewall's flow volume, not a production
 # streaming cluster.

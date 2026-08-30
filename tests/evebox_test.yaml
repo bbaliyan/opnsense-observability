@@ -1,0 +1,77 @@
+suite: evebox
+templates:
+  - evebox/deployment.yaml
+  - evebox/service.yaml
+  - evebox/pvc.yaml
+set:
+  evebox.enabled: true
+tests:
+  - it: renders nothing when evebox is disabled
+    template: evebox/deployment.yaml
+    set:
+      evebox.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders a Deployment with the pinned EveBox image and SQLite args
+    template: evebox/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: jasonish/evebox:0.28.0
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --sqlite
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --no-auth
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --no-tls
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --host
+  - it: uses Recreate strategy to avoid deadlocking on the RWO data PVC
+    template: evebox/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: Recreate
+  - it: does not set pod-level runAsNonRoot, since the image only runs as root
+    template: evebox/deployment.yaml
+    asserts:
+      - notExists:
+          path: spec.template.spec.securityContext.runAsNonRoot
+  - it: mounts the data PVC at /var/lib/evebox
+    template: evebox/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /var/lib/evebox
+      - equal:
+          path: spec.template.spec.volumes[0].persistentVolumeClaim.claimName
+          value: RELEASE-NAME-opnsense-observability-evebox
+  - it: renders a PVC with the configured size
+    template: evebox/pvc.yaml
+    set:
+      evebox.persistence.size: 10Gi
+    asserts:
+      - isKind:
+          of: PersistentVolumeClaim
+      - equal:
+          path: spec.resources.requests.storage
+          value: 10Gi
+  - it: exposes the configured port as a ClusterIP Service by default
+    template: evebox/service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - equal:
+          path: spec.ports[0].port
+          value: 5636
+      - equal:
+          path: spec.ports[0].targetPort
+          value: http
