@@ -1,0 +1,39 @@
+suite: akvorado outlet
+templates:
+  - akvorado/outlet-deployment.yaml
+  - akvorado/outlet-service.yaml
+  - akvorado/outlet-servicemonitor.yaml
+set:
+  akvorado.enabled: true
+tests:
+  - it: renders nothing when akvorado is disabled
+    template: akvorado/outlet-deployment.yaml
+    set:
+      akvorado.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: mounts the GeoIP PVC read-only when geoip.enabled
+    template: akvorado/outlet-deployment.yaml
+    set:
+      akvorado.geoip.enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].persistentVolumeClaim.claimName
+          value: RELEASE-NAME-opnsense-observability-geoip
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].readOnly
+          value: true
+  - it: skips the GeoIP volume when geoip.enabled is false
+    template: akvorado/outlet-deployment.yaml
+    set:
+      akvorado.geoip.enabled: false
+    asserts:
+      - notExists:
+          path: spec.template.spec.volumes
+  - it: exposes metrics on port 8080
+    template: akvorado/outlet-service.yaml
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 8080

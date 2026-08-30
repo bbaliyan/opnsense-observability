@@ -1,0 +1,58 @@
+{{- if .Values.akvorado.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-akvorado-outlet
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: akvorado-outlet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "opnsense-observability.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: akvorado-outlet
+  template:
+    metadata:
+      labels:
+        {{- include "opnsense-observability.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: akvorado-outlet
+    spec:
+      containers:
+        - name: outlet
+          image: "{{ .Values.akvorado.image.repository }}:{{ .Values.akvorado.image.tag }}"
+          imagePullPolicy: {{ .Values.akvorado.image.pullPolicy }}
+          command:
+            - akvorado
+            - outlet
+            - http://{{ include "opnsense-observability.fullname" . }}-akvorado-orchestrator:8080
+          ports:
+            - name: http
+              containerPort: 8080
+          {{- if .Values.akvorado.geoip.enabled }}
+          volumeMounts:
+            - name: geoip
+              mountPath: /usr/share/GeoIP
+              readOnly: true
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /api/v0/outlet/metrics
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v0/outlet/metrics
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.akvorado.resources | nindent 12 }}
+      {{- if .Values.akvorado.geoip.enabled }}
+      volumes:
+        - name: geoip
+          persistentVolumeClaim:
+            claimName: {{ include "opnsense-observability.fullname" . }}-geoip
+      {{- end }}
+{{- end }}
