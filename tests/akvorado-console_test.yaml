@@ -1,0 +1,46 @@
+suite: akvorado console
+templates:
+  - akvorado/console-deployment.yaml
+  - akvorado/console-service.yaml
+  - akvorado/console-ingress.yaml
+set:
+  akvorado.enabled: true
+tests:
+  - it: renders nothing when akvorado is disabled
+    template: akvorado/console-deployment.yaml
+    set:
+      akvorado.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: points at the orchestrator over HTTP
+    template: akvorado/console-deployment.yaml
+    release:
+      name: obs
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: http://obs-opnsense-observability-akvorado-orchestrator:8080
+  - it: renders no Ingress by default
+    template: akvorado/console-ingress.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders an Ingress with the configured host when enabled
+    template: akvorado/console-ingress.yaml
+    set:
+      akvorado.console.ingress.enabled: true
+      akvorado.console.ingress.host: "netflow.example.internal"
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].host
+          value: netflow.example.internal
+  - it: fails to render an Ingress with no host set
+    template: akvorado/console-ingress.yaml
+    set:
+      akvorado.console.ingress.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "akvorado.console.ingress.host is required when akvorado.console.ingress.enabled"
