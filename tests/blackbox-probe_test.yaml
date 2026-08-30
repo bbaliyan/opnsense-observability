@@ -1,0 +1,34 @@
+suite: blackbox Probe for dual-vantage-point connectivity
+templates:
+  - blackbox/probe.yaml
+set:
+  blackboxExporter.wanGatewayAddress: "10.20.30.1"
+tests:
+  - it: renders a Probe with the three static targets and correct module
+    asserts:
+      - isKind:
+          of: Probe
+      - equal:
+          path: spec.module
+          value: icmp
+      - equal:
+          path: spec.interval
+          value: 10s
+      - contains:
+          path: spec.targets.staticConfig.static
+          content: 1.1.1.1
+      - contains:
+          path: spec.targets.staticConfig.static
+          content: 8.8.8.8
+      - contains:
+          path: spec.targets.staticConfig.static
+          content: "10.20.30.1"
+      - equal:
+          path: spec.targets.staticConfig.labels.vantage
+          value: cluster
+  - it: renders nothing when blackboxExporter is disabled
+    set:
+      blackboxExporter.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

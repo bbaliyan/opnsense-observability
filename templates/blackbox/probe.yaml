@@ -1,0 +1,28 @@
+{{- if .Values.blackboxExporter.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-connectivity
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    {{- with .Values.blackboxExporter.probeSelectorLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  jobName: opnsense-connectivity-cluster
+  interval: {{ .Values.blackboxExporter.scrapeInterval }}
+  module: icmp
+  prober:
+    url: {{ .Release.Name }}-blackbox-exporter:9115
+    path: /probe
+  targets:
+    staticConfig:
+      static:
+        - "1.1.1.1"
+        - "8.8.8.8"
+        {{- if .Values.blackboxExporter.wanGatewayAddress }}
+        - {{ .Values.blackboxExporter.wanGatewayAddress | quote }}
+        {{- end }}
+      labels:
+        vantage: cluster
+{{- end }}
