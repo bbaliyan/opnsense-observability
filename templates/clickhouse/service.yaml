@@ -1,0 +1,20 @@
+{{- if .Values.akvorado.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-clickhouse
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+spec:
+  selector:
+    {{- include "opnsense-observability.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+  ports:
+    - name: native
+      port: 9000
+      targetPort: native
+    - name: http
+      port: 8123
+      targetPort: http
+{{- end }}

@@ -77,3 +77,59 @@ serviceMonitor:
   namespace: ""                  # defaults to release namespace
   labels: {}                     # must match the cluster Prometheus's serviceMonitorSelector
   interval: 30s
+
+# -- Akvorado: NetFlow/IPFIX traffic-analytics pipeline (inlet, outlet,
+# orchestrator, console) backed by Redpanda and a vendored single-node
+# ClickHouse. Off by default — enabling it adds Redpanda + ClickHouse pods.
+akvorado:
+  enabled: false
+  image:
+    repository: ghcr.io/akvorado/akvorado
+    tag: "v2026.8.1"
+    pullPolicy: IfNotPresent
+  netflow:
+    listenPort: 2055
+    serviceType: LoadBalancer   # so OPNsense on the LAN side can reach it
+  kafka:
+    # Empty = compute from the bundled Redpanda's internal Kafka listener
+    # ({{ .Release.Name }}-redpanda:9093). Set to point at an external broker.
+    brokers: []
+  clickhouse:
+    image:
+      repository: clickhouse/clickhouse-server
+      tag: "26.3.25.2"
+    persistence:
+      size: 20Gi
+      storageClassName: ""
+    resources:
+      requests: {cpu: 250m, memory: 512Mi}
+      limits: {memory: 2Gi}
+  geoip:
+    enabled: true               # auto-download DB-IP Lite .mmdb files
+    source: dbip-lite            # dbip-lite (default, no account) | maxmind
+    updateSchedule: "0 6 1 * *"  # monthly, DB-IP republishes monthly
+    persistence:
+      size: 256Mi
+      storageClassName: ""
+  console:
+    ingress:
+      enabled: false
+      className: ""
+      host: ""
+      tls: []
+      annotations: {}
+  resources:
+    requests: {cpu: 50m, memory: 64Mi}
+    limits: {memory: 256Mi}
+
+# Passthrough values for the redpanda subchart. Single-node by default —
+# this chart targets one homelab firewall's flow volume, not a production
+# streaming cluster.
+redpanda:
+  statefulset:
+    replicas: 1
+  storage:
+    persistentVolume:
+      size: 10Gi
+  console:
+    enabled: false

@@ -1,0 +1,39 @@
+suite: clickhouse statefulset and service
+templates:
+  - clickhouse/statefulset.yaml
+  - clickhouse/service.yaml
+set:
+  akvorado.enabled: true
+tests:
+  - it: renders nothing when akvorado is disabled
+    template: clickhouse/statefulset.yaml
+    set:
+      akvorado.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders a StatefulSet with the pinned ClickHouse image
+    template: clickhouse/statefulset.yaml
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: clickhouse/clickhouse-server:26.3.25.2
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 9000
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 20Gi
+  - it: renders a Service exposing native and http ports
+    template: clickhouse/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.ports[0].port
+          value: 9000
+      - equal:
+          path: spec.ports[1].port
+          value: 8123
