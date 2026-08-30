@@ -15,7 +15,7 @@ jobs:
 
       - uses: azure/setup-helm@v4
         with:
-          version: v3.16.4
+          version: v4.2.4
 
       - name: Add prometheus-community repo
         run: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
