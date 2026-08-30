@@ -21,7 +21,7 @@ jobs:
         run: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
       - name: Install helm-unittest
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
 
       - name: Run helm-unittest
         run: helm unittest .
