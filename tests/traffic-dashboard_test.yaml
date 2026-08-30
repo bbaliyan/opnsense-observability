@@ -1,0 +1,31 @@
+suite: traffic dashboard configmap
+templates:
+  - dashboards/traffic-dashboard.yaml
+tests:
+  - it: renders nothing when akvorado is disabled
+    set:
+      dashboards.enabled: true
+      akvorado.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders nothing when dashboards are disabled
+    set:
+      dashboards.enabled: false
+      akvorado.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders a ConfigMap with the grafana_dashboard label when both are enabled
+    set:
+      dashboards.enabled: true
+      akvorado.enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.labels.grafana_dashboard
+          value: "1"
+      - matchRegex:
+          path: data["traffic.json"]
+          pattern: "opnsense-traffic"

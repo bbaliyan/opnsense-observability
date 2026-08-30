@@ -1,0 +1,80 @@
+{
+  "title": "OPNsense Traffic (NetFlow)",
+  "uid": "opnsense-traffic",
+  "tags": ["opnsense", "netflow"],
+  "timezone": "browser",
+  "style": "dark",
+  "schemaVersion": 39,
+  "templating": {
+    "list": [
+      {
+        "name": "DS_CLICKHOUSE",
+        "type": "datasource",
+        "query": "grafana-clickhouse-datasource",
+        "label": "ClickHouse (Akvorado)"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "geomap",
+      "title": "Traffic by destination country",
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 0},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "continuous-blues"}
+        }
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT DstCountry AS country, sum(Bytes) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY DstCountry ORDER BY bytes DESC",
+          "format": 1
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Top talkers (source IP)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 10},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "rawSql": "SELECT SrcAddr AS source_ip, sum(Bytes) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY SrcAddr ORDER BY bytes DESC LIMIT 20",
+          "format": 1
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Top destination ASNs",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 10},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "rawSql": "SELECT DstAS AS asn, sum(Bytes) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY DstAS ORDER BY bytes DESC LIMIT 20",
+          "format": 1
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Traffic by protocol",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 18},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "fieldConfig": {
+        "defaults": {"unit": "Bps"}
+      },
+      "targets": [
+        {
+          "rawSql": "SELECT toStartOfInterval(TimeReceived, INTERVAL 1 minute) AS time, ProtoName AS metric, sum(Bytes) / 60 AS bytes_per_sec FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY time, ProtoName ORDER BY time",
+          "format": 1
+        }
+      ]
+    }
+  ]
+}

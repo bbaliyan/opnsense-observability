@@ -61,4 +61,14 @@ spec:
             summary: "Cluster-side internet connectivity probe: all targets down"
             description: "Every target in the cluster-vantage-point blackbox probe (job=opnsense-connectivity-cluster) has failed for at least 2 minutes — this indicates a real loss of internet connectivity, not a single flaky target."
         {{- end }}
+        {{- if .Values.alerts.akvoradoPipelineLag.enabled }}
+        - alert: AkvoradoPipelineLag
+          expr: rate(akvorado_outlet_kafka_records_consumed_total[5m]) == 0 and rate(akvorado_inlet_flow_input_udp_packets_total[5m]) > 0
+          for: 10m
+          labels:
+            severity: {{ .Values.alerts.akvoradoPipelineLag.severity }}
+          annotations:
+            summary: "Akvorado outlet has stopped consuming flows"
+            description: "The inlet is receiving NetFlow packets but the outlet has consumed nothing from Kafka for at least 10 minutes — check the outlet and ClickHouse for errors."
+        {{- end }}
 {{- end }}

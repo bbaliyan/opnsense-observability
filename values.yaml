@@ -71,6 +71,7 @@ alerts:
   highPacketLoss: {enabled: true, thresholdPercent: 5, severity: warning}
   highLatency: {enabled: true, thresholdMs: 150, severity: warning}
   clusterConnectivityLost: {enabled: true, severity: critical}
+  akvoradoPipelineLag: {enabled: true, severity: warning}
 
 serviceMonitor:
   enabled: true

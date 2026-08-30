@@ -37,6 +37,7 @@ tests:
   - it: omits the cluster connectivity alert when individually disabled
     set:
       alerts.clusterConnectivityLost.enabled: false
+      alerts.akvoradoPipelineLag.enabled: false
     asserts:
       - lengthEqual:
           path: spec.groups[0].rules
@@ -47,3 +48,17 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+  - it: renders AkvoradoPipelineLag when enabled
+    set:
+      alerts.akvoradoPipelineLag.enabled: true
+    asserts:
+      - equal:
+          path: spec.groups[0].rules[5].alert
+          value: AkvoradoPipelineLag
+  - it: omits AkvoradoPipelineLag when disabled
+    set:
+      alerts.akvoradoPipelineLag.enabled: false
+    asserts:
+      - lengthEqual:
+          path: spec.groups[0].rules
+          count: 5
