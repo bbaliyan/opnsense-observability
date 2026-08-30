@@ -14,6 +14,20 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
+  - it: renders no Service when evebox is disabled
+    template: evebox/service.yaml
+    set:
+      evebox.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders no PVC when evebox is disabled
+    template: evebox/pvc.yaml
+    set:
+      evebox.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
   - it: renders a Deployment with the pinned EveBox image and SQLite args
     template: evebox/deployment.yaml
     asserts:
@@ -22,18 +36,11 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: jasonish/evebox:0.28.0
-      - contains:
+      - equal:
           path: spec.template.spec.containers[0].args
-          content: --sqlite
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: --no-auth
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: --no-tls
-      - contains:
-          path: spec.template.spec.containers[0].args
-          content: --host
+          value: ["--sqlite", "--no-auth", "--no-tls", "--host", "0.0.0.0", "--port", "5636", "-D", "/var/lib/evebox"]
+      - notExists:
+          path: spec.template.spec.containers[0].command
   - it: uses Recreate strategy to avoid deadlocking on the RWO data PVC
     template: evebox/deployment.yaml
     asserts:

@@ -126,7 +126,7 @@ akvorado:
     requests: {cpu: 50m, memory: 128Mi}
     limits: {memory: 1Gi}
 
-# EveBox: Suricata IDS alert triage UI, backed by embedded SQLite (no
+# -- EveBox: Suricata IDS alert triage UI, backed by embedded SQLite (no
 # Elasticsearch/Kafka). Off by default. The EveBox Agent runs on OPNsense
 # itself (not part of this chart) and ships Suricata EVE JSON to this
 # Service over plain HTTP — see README prerequisites.

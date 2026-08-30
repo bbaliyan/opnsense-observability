@@ -61,22 +61,35 @@ monitor-only dpinger gateways).
    This is a small binary, **not** an OPNsense plugin (no entry in
    Firmware → Plugins) — the one deliberate exception in this design to
    "every OPNsense-side piece is a native, already-shipping feature."
-4. Find the `evebox` Service's address:
-   `kubectl get svc <release>-evebox -o wide`
-5. Configure the Agent to tail Suricata's EVE JSON file and ship to that
-   address over plain HTTP, e.g.:
+4. The `evebox` Service needs to be reachable from OPNsense — with the
+   shipped defaults (`evebox.service.type: ClusterIP`, Ingress disabled)
+   it is cluster-internal only, and the Agent (which runs on OPNsense,
+   outside the cluster) can't reach it. Pick one:
+   - Enable `evebox.ingress` (see `examples/full-values.yaml`, which sets
+     `host: "ids.home.example"`) and point the Agent at that host.
+   - Or set `evebox.service.type: LoadBalancer` (same approach as
+     `akvorado.netflow.serviceType`) and find the address:
+     `kubectl get svc <release>-evebox -o wide`.
+5. Configure the Agent to tail Suricata's EVE JSON file and ship to
+   whichever address you exposed in step 4, e.g. for the Ingress path:
    ```yaml
    server:
-     url: http://<release>-evebox.<namespace>.svc.cluster.local:5636
+     url: http://ids.home.example
    input:
      paths:
        - "/var/log/suricata/eve.json"
    ```
-6. EveBox's own authentication is disabled (`--no-auth`) — acceptable
-   since the Service is a plain ClusterIP never exposed outside the
-   cluster by default. If you enable `evebox.ingress`, put an
-   authenticating reverse proxy in front; EveBox does not gate access
-   itself in this configuration.
+   (For the `LoadBalancer` path, use that Service's external address and
+   `evebox.service.port`, `5636` by default, instead. This chart doesn't
+   manage TLS termination, so use `http://` unless you've set up your own
+   TLS at the Ingress.)
+6. EveBox's own authentication is disabled (`--no-auth`). Treat whichever
+   address you exposed in step 4 as trusted-network-only — don't expose
+   it to the public internet without your own network-level protection
+   (VPN, firewall allowlist, etc.). Don't put an authenticating reverse
+   proxy in front of it: the Agent's ingest traffic travels the same
+   path as browser access, so an authenticating proxy would also block
+   the Agent from ever delivering events.
 7. EveBox runs as root (UID 0) — confirmed against the real
    `jasonish/evebox` image, which has no non-root user. It will not
    schedule in a namespace enforcing the `restricted` Pod Security
@@ -104,6 +117,7 @@ monitor-only dpinger gateways).
 | `akvorado.clickhouse.persistence.size` | PVC size for the vendored single-node ClickHouse StatefulSet. |
 | `akvorado.console.ingress.enabled` | Expose the Akvorado console via Ingress. |
 | `evebox.enabled` | Deploy the EveBox server for Suricata IDS alert triage. Default `false`. |
+| `evebox.service.type` | Service type for EveBox; set to `LoadBalancer` (or use `evebox.ingress`) so the OPNsense-side Agent can reach it — see IDS alert triage prerequisites. |
 | `evebox.service.port` | Port the EveBox server listens on and the Agent ships to. |
 | `evebox.persistence.size` | PVC size for EveBox's SQLite data (events + FTS index). |
 | `evebox.ingress.enabled` | Expose the EveBox UI via Ingress. |
