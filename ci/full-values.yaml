@@ -30,5 +30,7 @@ redpanda:
     memory:
       container:
         max: 1Gi
+  tls:
+    enabled: false   # no cert-manager in the CI kind cluster; akvorado talks plaintext Kafka anyway
 
 extraObjects: []
