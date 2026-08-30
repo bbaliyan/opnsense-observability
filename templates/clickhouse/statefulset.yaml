@@ -22,6 +22,9 @@ spec:
       containers:
         - name: clickhouse
           image: "{{ .Values.akvorado.clickhouse.image.repository }}:{{ .Values.akvorado.clickhouse.image.tag }}"
+          env:
+            - name: CLICKHOUSE_SKIP_USER_SETUP
+              value: "1"
           ports:
             - name: native
               containerPort: 9000

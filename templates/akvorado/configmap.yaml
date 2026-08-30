@@ -1,7 +1,7 @@
 {{- if .Values.akvorado.enabled }}
 {{- $brokers := .Values.akvorado.kafka.brokers }}
 {{- if not $brokers }}
-{{- $brokers = list (printf "%s-redpanda:9093" .Release.Name) }}
+{{- $brokers = list (printf "%s:9093" .Release.Name) }}
 {{- end }}
 apiVersion: v1
 kind: ConfigMap

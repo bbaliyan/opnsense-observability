@@ -18,8 +18,8 @@ akvorado:
     persistence:
       size: 2Gi
     resources:
-      requests: {cpu: 100m, memory: 256Mi}
-      limits: {memory: 512Mi}
+      requests: {cpu: 100m, memory: 512Mi}
+      limits: {memory: 1500Mi}
 
 redpanda:
   statefulset:
@@ -29,7 +29,7 @@ redpanda:
       cores: 500m
     memory:
       container:
-        max: 1Gi
+        max: 2Gi
   tls:
     enabled: false   # no cert-manager in the CI kind cluster; akvorado talks plaintext Kafka anyway
 

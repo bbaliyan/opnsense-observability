@@ -23,7 +23,7 @@ tests:
           value: ["akvorado", "orchestrator", "/etc/akvorado/akvorado.yaml"]
       - equal:
           path: spec.template.spec.containers[0].image
-          value: ghcr.io/akvorado/akvorado:v2026.8.1
+          value: quay.io/akvorado/akvorado:2026.8.1
   - it: exposes port 8080 on the Service
     template: akvorado/orchestrator-service.yaml
     asserts:

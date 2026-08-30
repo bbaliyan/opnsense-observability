@@ -18,7 +18,7 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: data["akvorado.yaml"]
-          pattern: "my-release-redpanda:9093"
+          pattern: "my-release:9093"
   - it: uses an explicit broker list when provided
     set:
       akvorado.kafka.brokers: ["external-kafka:9092"]
