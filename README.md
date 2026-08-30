@@ -44,6 +44,11 @@ monitor-only dpinger gateways).
    preserve OPNsense's real source IP (Akvorado attributes flows by
    source address). This requires a `LoadBalancer` implementation that
    preserves client IPs — true for MetalLB and most cloud load balancers.
+7. Akvorado's four workloads (orchestrator, inlet, outlet, console) run
+   as root (UID 0), since the upstream `quay.io/akvorado/akvorado` image
+   has no non-root user. They will not schedule in a namespace enforcing
+   the `restricted` Pod Security Standard — only `baseline` or
+   `privileged` namespaces work.
 
 ## Values reference
 

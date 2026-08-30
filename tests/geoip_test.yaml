@@ -74,6 +74,14 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: "only dbip-lite is currently supported for akvorado.geoip.source"
+  - it: fails to render when an unsupported geoip source is set even if geoip.enabled is false
+    template: geoip/configmap.yaml
+    set:
+      akvorado.geoip.source: maxmind
+      akvorado.geoip.enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: "only dbip-lite is currently supported for akvorado.geoip.source"
   - it: renders normally with the default dbip-lite source
     template: geoip/configmap.yaml
     asserts:

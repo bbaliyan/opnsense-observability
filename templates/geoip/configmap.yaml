@@ -1,7 +1,9 @@
-{{- if and .Values.akvorado.enabled .Values.akvorado.geoip.enabled }}
+{{- if .Values.akvorado.enabled }}
 {{- if ne .Values.akvorado.geoip.source "dbip-lite" }}
 {{- fail "only dbip-lite is currently supported for akvorado.geoip.source" }}
 {{- end }}
+{{- end }}
+{{- if and .Values.akvorado.enabled .Values.akvorado.geoip.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
