@@ -1,0 +1,45 @@
+suite: akvorado inlet
+templates:
+  - akvorado/inlet-deployment.yaml
+  - akvorado/inlet-service.yaml
+  - akvorado/inlet-servicemonitor.yaml
+set:
+  akvorado.enabled: true
+tests:
+  - it: renders nothing when akvorado is disabled
+    template: akvorado/inlet-deployment.yaml
+    set:
+      akvorado.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: points at the orchestrator over HTTP
+    template: akvorado/inlet-deployment.yaml
+    release:
+      name: obs
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: http://obs-opnsense-observability-akvorado-orchestrator:8080
+  - it: listens for NetFlow on the configured UDP port
+    template: akvorado/inlet-deployment.yaml
+    set:
+      akvorado.netflow.listenPort: 2055
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 2055
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: UDP
+  - it: exposes the NetFlow port as the configured Service type
+    template: akvorado/inlet-service.yaml
+    set:
+      akvorado.netflow.serviceType: LoadBalancer
+    asserts:
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+      - equal:
+          path: spec.ports[0].protocol
+          value: UDP

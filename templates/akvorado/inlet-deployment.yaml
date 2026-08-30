@@ -1,0 +1,49 @@
+{{- if .Values.akvorado.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-akvorado-inlet
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: akvorado-inlet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "opnsense-observability.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: akvorado-inlet
+  template:
+    metadata:
+      labels:
+        {{- include "opnsense-observability.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: akvorado-inlet
+    spec:
+      containers:
+        - name: inlet
+          image: "{{ .Values.akvorado.image.repository }}:{{ .Values.akvorado.image.tag }}"
+          imagePullPolicy: {{ .Values.akvorado.image.pullPolicy }}
+          command:
+            - akvorado
+            - inlet
+            - http://{{ include "opnsense-observability.fullname" . }}-akvorado-orchestrator:8080
+          ports:
+            - name: netflow
+              containerPort: {{ .Values.akvorado.netflow.listenPort }}
+              protocol: UDP
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /api/v0/inlet/metrics
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v0/inlet/metrics
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.akvorado.resources | nindent 12 }}
+{{- end }}

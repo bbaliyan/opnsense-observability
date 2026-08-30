@@ -1,0 +1,22 @@
+{{- if .Values.akvorado.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-akvorado-inlet
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: akvorado-inlet
+spec:
+  type: {{ .Values.akvorado.netflow.serviceType }}
+  selector:
+    {{- include "opnsense-observability.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: akvorado-inlet
+  ports:
+    - name: netflow
+      port: {{ .Values.akvorado.netflow.listenPort }}
+      targetPort: netflow
+      protocol: UDP
+    - name: http
+      port: 8080
+      targetPort: http
+{{- end }}
