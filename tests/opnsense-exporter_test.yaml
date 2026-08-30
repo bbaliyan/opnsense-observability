@@ -1,0 +1,58 @@
+suite: opnsense-exporter deployment and service
+templates:
+  - opnsense-exporter/deployment.yaml
+  - opnsense-exporter/service.yaml
+  - opnsense-exporter/servicemonitor.yaml
+set:
+  opnsenseExporter.opnsense.address: "192.168.1.1"
+  opnsenseExporter.opnsense.apiKeySecretRef.name: "opnsense-api"
+  opnsenseExporter.opnsense.apiKeySecretRef.key: "api-key"
+  opnsenseExporter.opnsense.apiSecretSecretRef.name: "opnsense-api"
+  opnsenseExporter.opnsense.apiSecretSecretRef.key: "api-secret"
+tests:
+  - it: renders a Deployment with the pinned image and correct flags
+    template: opnsense-exporter/deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/athennamind/opnsense-exporter:0.0.16
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --opnsense.address=192.168.1.1
+      - contains:
+          path: spec.template.spec.containers[0].args
+          content: --opnsense.protocol=https
+      - equal:
+          path: spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
+          value: opnsense-api
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+  - it: renders nothing when disabled
+    template: opnsense-exporter/deployment.yaml
+    set:
+      opnsenseExporter.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders a Service on port 8080
+    template: opnsense-exporter/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.ports[0].port
+          value: 8080
+      - equal:
+          path: spec.ports[0].name
+          value: http
+  - it: renders a ServiceMonitor when serviceMonitor.enabled
+    template: opnsense-exporter/servicemonitor.yaml
+    asserts:
+      - isKind:
+          of: ServiceMonitor
+      - equal:
+          path: spec.endpoints[0].port
+          value: http

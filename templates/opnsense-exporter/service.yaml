@@ -1,0 +1,17 @@
+{{- if .Values.opnsenseExporter.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-opnsense-exporter
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: opnsense-exporter
+spec:
+  selector:
+    {{- include "opnsense-observability.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: opnsense-exporter
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+{{- end }}

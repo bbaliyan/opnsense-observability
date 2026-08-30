@@ -1,0 +1,60 @@
+{{- if .Values.opnsenseExporter.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-opnsense-exporter
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: opnsense-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "opnsense-observability.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: opnsense-exporter
+  template:
+    metadata:
+      labels:
+        {{- include "opnsense-observability.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: opnsense-exporter
+    spec:
+      containers:
+        - name: opnsense-exporter
+          image: "{{ .Values.opnsenseExporter.image.repository }}:{{ .Values.opnsenseExporter.image.tag }}"
+          imagePullPolicy: {{ .Values.opnsenseExporter.image.pullPolicy }}
+          args:
+            - --opnsense.protocol={{ .Values.opnsenseExporter.opnsense.protocol }}
+            - --opnsense.address={{ .Values.opnsenseExporter.opnsense.address }}
+            - --exporter.instance-label={{ .Values.opnsenseExporter.opnsense.instanceLabel }}
+            {{- if .Values.opnsenseExporter.opnsense.insecureSkipVerify }}
+            - --opnsense.insecure
+            {{- end }}
+          env:
+            - name: OPNSENSE_EXPORTER_OPS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.opnsenseExporter.opnsense.apiKeySecretRef.name }}
+                  key: {{ .Values.opnsenseExporter.opnsense.apiKeySecretRef.key }}
+            - name: OPNSENSE_EXPORTER_OPS_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.opnsenseExporter.opnsense.apiSecretSecretRef.name }}
+                  key: {{ .Values.opnsenseExporter.opnsense.apiSecretSecretRef.key }}
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.opnsenseExporter.resources | nindent 12 }}
+{{- end }}
