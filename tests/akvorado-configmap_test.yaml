@@ -1,0 +1,39 @@
+suite: akvorado shared config
+templates:
+  - akvorado/configmap.yaml
+set:
+  akvorado.enabled: true
+tests:
+  - it: renders nothing when akvorado is disabled
+    set:
+      akvorado.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: defaults the Kafka broker to the bundled Redpanda's internal listener
+    release:
+      name: my-release
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["akvorado.yaml"]
+          pattern: "my-release-redpanda:9093"
+  - it: uses an explicit broker list when provided
+    set:
+      akvorado.kafka.brokers: ["external-kafka:9092"]
+    asserts:
+      - matchRegex:
+          path: data["akvorado.yaml"]
+          pattern: "external-kafka:9092"
+      - notMatchRegex:
+          path: data["akvorado.yaml"]
+          pattern: "redpanda:9093"
+  - it: points the GeoIP databases at the DB-IP Lite mmdb paths
+    asserts:
+      - matchRegex:
+          path: data["outlet.yaml"]
+          pattern: "dbip-asn-lite.mmdb"
+      - matchRegex:
+          path: data["outlet.yaml"]
+          pattern: "dbip-country-lite.mmdb"

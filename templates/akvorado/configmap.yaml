@@ -1,0 +1,52 @@
+{{- if .Values.akvorado.enabled }}
+{{- $brokers := .Values.akvorado.kafka.brokers }}
+{{- if not $brokers }}
+{{- $brokers = list (printf "%s-redpanda:9093" .Release.Name) }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-akvorado-config
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: akvorado
+data:
+  akvorado.yaml: |
+    ---
+    kafka:
+      topic: flows
+      brokers:
+        {{- range $brokers }}
+        - {{ . | quote }}
+        {{- end }}
+    clickhousedb:
+      servers:
+        - {{ include "opnsense-observability.fullname" . }}-clickhouse:9000
+    clickhouse:
+      orchestrator-url: http://{{ include "opnsense-observability.fullname" . }}-akvorado-orchestrator:8080
+      prometheus-endpoint: /api/v0/metrics
+    inlet: !include "inlet.yaml"
+    outlet: !include "outlet.yaml"
+    console: !include "console.yaml"
+  inlet.yaml: |
+    ---
+    flow:
+      inputs:
+        - type: udp
+          decoder: netflow
+          listen: :{{ .Values.akvorado.netflow.listenPort }}
+          workers: 2
+  outlet.yaml: |
+    ---
+    geoip:
+      optional: true
+      asn-database:
+        - /usr/share/GeoIP/dbip-asn-lite.mmdb
+      geo-database:
+        - /usr/share/GeoIP/dbip-country-lite.mmdb
+  console.yaml: |
+    ---
+    http:
+      cache:
+        type: memory
+{{- end }}
