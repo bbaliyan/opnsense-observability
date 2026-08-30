@@ -1,0 +1,39 @@
+{{- if and .Values.akvorado.enabled .Values.akvorado.geoip.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-geoip-init
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: geoip
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "opnsense-observability.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: geoip
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: geoip-download
+          image: curlimages/curl:8.11.1
+          command: ["/bin/sh", "/scripts/download.sh"]
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+            - name: geoip
+              mountPath: /geoip
+      volumes:
+        - name: script
+          configMap:
+            name: {{ include "opnsense-observability.fullname" . }}-geoip-script
+            defaultMode: 0755
+        - name: geoip
+          persistentVolumeClaim:
+            claimName: {{ include "opnsense-observability.fullname" . }}-geoip
+{{- end }}

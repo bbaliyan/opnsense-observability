@@ -1,0 +1,17 @@
+{{- if and .Values.akvorado.enabled .Values.akvorado.geoip.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-geoip
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: geoip
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- with .Values.akvorado.geoip.persistence.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.akvorado.geoip.persistence.size }}
+{{- end }}

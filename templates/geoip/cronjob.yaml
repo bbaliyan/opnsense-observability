@@ -1,0 +1,38 @@
+{{- if and .Values.akvorado.enabled .Values.akvorado.geoip.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-geoip-refresh
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: geoip
+spec:
+  schedule: {{ .Values.akvorado.geoip.updateSchedule | quote }}
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            {{- include "opnsense-observability.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: geoip
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: geoip-download
+              image: curlimages/curl:8.11.1
+              command: ["/bin/sh", "/scripts/download.sh"]
+              volumeMounts:
+                - name: script
+                  mountPath: /scripts
+                - name: geoip
+                  mountPath: /geoip
+          volumes:
+            - name: script
+              configMap:
+                name: {{ include "opnsense-observability.fullname" . }}-geoip-script
+                defaultMode: 0755
+            - name: geoip
+              persistentVolumeClaim:
+                claimName: {{ include "opnsense-observability.fullname" . }}-geoip
+{{- end }}

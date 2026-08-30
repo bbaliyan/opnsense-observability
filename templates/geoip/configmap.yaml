@@ -1,0 +1,37 @@
+{{- if and .Values.akvorado.enabled .Values.akvorado.geoip.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-geoip-script
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: geoip
+data:
+  download.sh: |
+    #!/bin/sh
+    set -eu
+    CUR_MONTH=$(date -u +%Y-%m)
+    PREV_MONTH=$(date -u -d "$(date -u +%Y-%m-01) -1 day" +%Y-%m)
+    for db in country asn; do
+      case "$db" in
+        country) out=dbip-country-lite.mmdb ;;
+        asn) out=dbip-asn-lite.mmdb ;;
+      esac
+      fetched=0
+      for m in "$CUR_MONTH" "$PREV_MONTH"; do
+        url="https://download.db-ip.com/free/dbip-${db}-lite-${m}.mmdb.gz"
+        status=$(curl -o /tmp/dbip.mmdb.gz -s -w "%{http_code}" "$url")
+        if [ "$status" = "200" ]; then
+          gunzip -f /tmp/dbip.mmdb.gz
+          mv /tmp/dbip.mmdb "/geoip/${out}"
+          fetched=1
+          break
+        fi
+      done
+      if [ "$fetched" != "1" ]; then
+        echo "failed to fetch dbip-${db}-lite for ${CUR_MONTH} or ${PREV_MONTH}" >&2
+        exit 1
+      fi
+    done
+    echo "GeoIP databases refreshed: $(ls -la /geoip)"
+{{- end }}

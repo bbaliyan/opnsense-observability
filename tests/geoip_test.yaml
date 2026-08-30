@@ -1,0 +1,55 @@
+suite: geoip download (pvc, job, cronjob)
+templates:
+  - geoip/pvc.yaml
+  - geoip/configmap.yaml
+  - geoip/job.yaml
+  - geoip/cronjob.yaml
+set:
+  akvorado.enabled: true
+  akvorado.geoip.enabled: true
+tests:
+  - it: renders nothing when akvorado is disabled
+    template: geoip/pvc.yaml
+    set:
+      akvorado.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders nothing when geoip.enabled is false
+    template: geoip/pvc.yaml
+    set:
+      akvorado.geoip.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: sizes the PVC from values
+    template: geoip/pvc.yaml
+    set:
+      akvorado.geoip.persistence.size: 256Mi
+    asserts:
+      - equal:
+          path: spec.resources.requests.storage
+          value: 256Mi
+  - it: the download script targets both dbip-lite mmdb files by exact filename
+    template: geoip/configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["download.sh"]
+          pattern: "dbip-country-lite.mmdb"
+      - matchRegex:
+          path: data["download.sh"]
+          pattern: "dbip-asn-lite.mmdb"
+  - it: the init Job carries post-install/post-upgrade hook annotations
+    template: geoip/job.yaml
+    asserts:
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: post-install,post-upgrade
+  - it: the CronJob uses the configured schedule
+    template: geoip/cronjob.yaml
+    set:
+      akvorado.geoip.updateSchedule: "0 6 1 * *"
+    asserts:
+      - equal:
+          path: spec.schedule
+          value: "0 6 1 * *"
