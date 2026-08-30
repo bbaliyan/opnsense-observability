@@ -1,0 +1,53 @@
+{{- if .Values.alerts.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-alerts
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  groups:
+    - name: opnsense-observability.core
+      rules:
+        {{- if .Values.alerts.firmwareUpdateAvailable.enabled }}
+        - alert: OPNsenseFirmwareUpdateAvailable
+          expr: opnsense_firmware_new_packages > 0
+          for: 1h
+          labels:
+            severity: {{ .Values.alerts.firmwareUpdateAvailable.severity }}
+          annotations:
+            summary: "OPNsense has {{ "{{" }} $value {{ "}}" }} package update(s) available"
+            description: "Check System → Firmware on OPNsense and apply updates."
+        {{- end }}
+        {{- if .Values.alerts.gatewayDown.enabled }}
+        - alert: OPNsenseGatewayDown
+          expr: opnsense_gateways_status{name!~"MONITOR_.*"} != 1
+          for: 2m
+          labels:
+            severity: {{ .Values.alerts.gatewayDown.severity }}
+          annotations:
+            summary: "OPNsense gateway {{ "{{" }} $labels.name {{ "}}" }} is not online"
+            description: "Gateway status is not 1 (Online) for at least 2 minutes."
+        {{- end }}
+        {{- if .Values.alerts.highPacketLoss.enabled }}
+        - alert: OPNsenseHighPacketLoss
+          expr: opnsense_gateways_loss_percentage > {{ .Values.alerts.highPacketLoss.thresholdPercent }}
+          for: 5m
+          labels:
+            severity: {{ .Values.alerts.highPacketLoss.severity }}
+          annotations:
+            summary: "Packet loss to {{ "{{" }} $labels.name {{ "}}" }} exceeds {{ .Values.alerts.highPacketLoss.thresholdPercent }}%"
+        {{- end }}
+        {{- if .Values.alerts.highLatency.enabled }}
+        - alert: OPNsenseHighLatency
+          expr: opnsense_gateways_rtt_milliseconds > {{ .Values.alerts.highLatency.thresholdMs }}
+          for: 5m
+          labels:
+            severity: {{ .Values.alerts.highLatency.severity }}
+          annotations:
+            summary: "Latency to {{ "{{" }} $labels.name {{ "}}" }} exceeds {{ .Values.alerts.highLatency.thresholdMs }}ms"
+        {{- end }}
+{{- end }}

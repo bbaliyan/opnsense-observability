@@ -1,0 +1,36 @@
+suite: core alert rules
+templates:
+  - alerts/prometheusrule.yaml
+tests:
+  - it: renders a PrometheusRule with all four core alerts
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: OPNsenseFirmwareUpdateAvailable
+      - equal:
+          path: spec.groups[0].rules[1].alert
+          value: OPNsenseGatewayDown
+      - equal:
+          path: spec.groups[0].rules[2].alert
+          value: OPNsenseHighPacketLoss
+      - equal:
+          path: spec.groups[0].rules[3].alert
+          value: OPNsenseHighLatency
+      - equal:
+          path: spec.groups[0].rules[1].labels.severity
+          value: critical
+  - it: omits the firmware alert when disabled
+    set:
+      alerts.firmwareUpdateAvailable.enabled: false
+    asserts:
+      - notEqual:
+          path: spec.groups[0].rules[0].alert
+          value: OPNsenseFirmwareUpdateAvailable
+  - it: renders nothing when alerts are disabled globally
+    set:
+      alerts.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
