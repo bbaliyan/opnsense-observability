@@ -1,0 +1,71 @@
+# -- opnsense-exporter: polls the OPNsense REST API for system/service/
+# firmware/gateway status. See README prerequisites for the read-only API
+# user/key this needs.
+opnsenseExporter:
+  enabled: true
+  image:
+    repository: ghcr.io/athennamind/opnsense-exporter
+    tag: "0.0.16"
+    pullPolicy: IfNotPresent
+  opnsense:
+    protocol: https
+    address: ""                 # e.g. 192.168.1.1
+    instanceLabel: "opnsense"
+    insecureSkipVerify: false
+    apiKeySecretRef: {name: "", key: "api-key"}
+    apiSecretSecretRef: {name: "", key: "api-secret"}
+  # Names of the monitor-only dpinger gateways (design spec §2a/§6) so
+  # dashboards can pair "vantage=opnsense" with "vantage=cluster" series
+  # for the same target.
+  connectivityGatewayNames:
+    cloudflare: "MONITOR_CLOUDFLARE"
+    google: "MONITOR_GOOGLE"
+  resources:
+    requests: {cpu: 10m, memory: 32Mi}
+    limits: {memory: 64Mi}
+
+# -- blackbox-exporter: ICMP probes to 1.1.1.1/8.8.8.8/the WAN gateway,
+# from inside the cluster (cluster-side vantage point).
+blackboxExporter:
+  enabled: true
+  scrapeInterval: 10s            # 5-15s band; not a 5-minute default
+  wanGatewayAddress: ""           # OPNsense WAN gateway IP, user-supplied
+  probeSelectorLabels: {}         # must match the cluster Prometheus's probeSelector
+
+# Passthrough values for the prometheus-blackbox-exporter subchart
+# (aliased "blackbox-exporter" in Chart.yaml). ICMP needs NET_RAW, which
+# the subchart ships commented out by default.
+blackbox-exporter:
+  config:
+    modules:
+      icmp:
+        prober: icmp
+        timeout: 5s
+        icmp:
+          preferred_ip_protocol: "ip4"
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    readOnlyRootFilesystem: true
+    runAsNonRoot: false
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+      add: ["NET_RAW"]
+
+dashboards:
+  enabled: true
+  folder: "OPNsense"
+
+alerts:
+  enabled: true
+  firmwareUpdateAvailable: {enabled: true, severity: warning}
+  gatewayDown: {enabled: true, severity: critical}
+  highPacketLoss: {enabled: true, thresholdPercent: 5, severity: warning}
+  highLatency: {enabled: true, thresholdMs: 150, severity: warning}
+
+serviceMonitor:
+  enabled: true
+  namespace: ""                  # defaults to release namespace
+  labels: {}                     # must match the cluster Prometheus's serviceMonitorSelector
+  interval: 30s

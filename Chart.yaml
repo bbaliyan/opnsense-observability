@@ -1,0 +1,21 @@
+apiVersion: v2
+name: opnsense-observability
+description: Kubernetes-native OPNsense monitoring — system health, firmware-update alerts, dual-vantage-point internet connectivity, NetFlow traffic analytics, and IDS alert triage.
+type: application
+version: 0.1.0-alpha.1
+appVersion: "0.1.0"
+home: https://github.com/OWNER/opnsense-observability
+sources:
+  - https://github.com/OWNER/opnsense-observability
+keywords:
+  - opnsense
+  - networking
+  - monitoring
+  - prometheus
+  - grafana
+dependencies:
+  - name: prometheus-blackbox-exporter
+    version: "11.17.2"
+    repository: https://prometheus-community.github.io/helm-charts
+    alias: blackbox-exporter
+    condition: blackboxExporter.enabled
