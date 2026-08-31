@@ -28,9 +28,12 @@ tests:
       - matchRegex:
           path: data["connectivity.json"]
           pattern: opnsense_gateways_loss_percentage\{name=~\\"\$gateway\\"\}
-      - notMatchRegex:
+      - matchRegex:
           path: data["connectivity.json"]
-          pattern: probe_success
+          pattern: probe_success\{job=\\"opnsense-wan-gateway\\"\}
+      - matchRegex:
+          path: data["connectivity.json"]
+          pattern: probe_duration_seconds\{job=\\"opnsense-wan-gateway\\"\}
   - it: maps all three gateway states so an unknown gateway never reads as healthy
     template: dashboards/connectivity-dashboard.yaml
     asserts:
@@ -68,6 +71,30 @@ tests:
       - notMatchRegex:
           path: data["opnsense-health.json"]
           pattern: __inputs|__requires
+  - it: drives node_exporter panels and exporter panels from separate instance variables
+    template: dashboards/opnsense-health-dashboard.yaml
+    asserts:
+      - matchRegex:
+          path: data["opnsense-health.json"]
+          pattern: '"query": "label_values\(opnsense_up, opnsense_instance\)"'
+      - matchRegex:
+          path: data["opnsense-health.json"]
+          pattern: '"query": "label_values\(node_boot_time_seconds, instance\)"'
+      - matchRegex:
+          path: data["opnsense-health.json"]
+          pattern: node_boot_time_seconds\{instance=\\"\$node_instance\\"\}
+      - matchRegex:
+          path: data["opnsense-health.json"]
+          pattern: opnsense_services_status\{opnsense_instance=\\"\$opnsense_instance\\"\}
+      - notMatchRegex:
+          path: data["opnsense-health.json"]
+          pattern: 'node_[a-z_]*\{instance=\\"\$opnsense_instance'
+      - matchRegex:
+          path: data["opnsense-health.json"]
+          pattern: 'device=~\\"\$fs_device\\"'
+      - matchRegex:
+          path: data["opnsense-health.json"]
+          pattern: 'interface=~\\"\$fw_interface\\"'
   - it: renders nothing when dashboards are disabled
     set:
       dashboards.enabled: false

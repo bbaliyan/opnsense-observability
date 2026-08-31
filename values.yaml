@@ -34,7 +34,7 @@ blackboxExporter:
   wanGatewayAddress: ""           # OPNsense WAN gateway IP, user-supplied
   probeSelectorLabels: {}         # must match the cluster Prometheus's probeSelector
 
-# Passthrough values for the prometheus-blackbox-exporter subchart
+# -- Passthrough values for the prometheus-blackbox-exporter subchart
 # (aliased "blackbox-exporter" in Chart.yaml). ICMP needs NET_RAW, which
 # the subchart ships commented out by default.
 blackbox-exporter:
@@ -55,18 +55,22 @@ blackbox-exporter:
       drop: ["ALL"]
       add: ["NET_RAW"]
 
+# -- Grafana dashboard ConfigMaps picked up by the dashboard sidecar.
 dashboards:
   enabled: true
   folder: "OPNsense"
 
+# -- PrometheusRule alerting on firmware, gateway, probe and pipeline health.
 alerts:
   enabled: true
   firmwareUpdateAvailable: {enabled: true, severity: warning}
   gatewayDown: {enabled: true, severity: critical}
   highPacketLoss: {enabled: true, thresholdPercent: 5, severity: warning}
   highLatency: {enabled: true, thresholdMs: 150, severity: warning}
+  probeFailed: {enabled: true, severity: critical}
   akvoradoPipelineLag: {enabled: true, severity: warning}
 
+# -- ServiceMonitor objects for this chart's own workloads.
 serviceMonitor:
   enabled: true
   namespace: ""                  # defaults to release namespace
@@ -158,7 +162,7 @@ evebox:
     requests: {cpu: 50m, memory: 128Mi}
     limits: {memory: 512Mi}
 
-# Passthrough values for the redpanda subchart. Single-node by default —
+# -- Passthrough values for the redpanda subchart. Single-node by default —
 # this chart targets one homelab firewall's flow volume, not a production
 # streaming cluster.
 redpanda:

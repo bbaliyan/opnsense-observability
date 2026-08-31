@@ -37,20 +37,48 @@ Two signals are **pushed** by the firewall:
 - Suricata EVE JSON goes over TCP syslog to the EveBox pod's syslog listener.
 
 Push direction is the reason those two endpoints cannot stay `ClusterIP`. The
-firewall lives outside the cluster and initiates the connection, so it needs a
-routable address — a `LoadBalancer` Service in both cases. This is the single
-most common setup mistake.
+firewall lives outside the cluster and initiates the connection, so each needs
+an address routable from the LAN. The defaults are not symmetric:
+`akvorado.netflow.serviceType` is already `LoadBalancer`, while
+`evebox.syslog.service.type` defaults to `ClusterIP` and you must set it to
+`LoadBalancer` (or otherwise publish it) yourself. Forgetting that is the
+single most common setup mistake.
 
 | Signal | Direction | Protocol / port | Firewall side | Cluster side |
 | --- | --- | --- | --- | --- |
 | System, service, firmware, gateway, Unbound metrics | Cluster pulls | HTTPS 443 (REST API) | Read-only API user + key | `opnsense-exporter` Deployment, scraped via ServiceMonitor |
 | Host CPU / memory / disk / load | Cluster pulls | HTTP 9100 | `os-node_exporter` plugin | Prometheus scrape of an `extraObjects` Service + Endpoints |
-| WAN gateway reachability | Cluster pulls | ICMP echo | WAN gateway IP responds | `blackbox-exporter` `Probe` |
-| NetFlow records | Firewall pushes | UDP 2055 | Reporting → Netflow target | `<release>-akvorado-inlet` Service (`LoadBalancer`) |
-| Suricata EVE JSON | Firewall pushes | TCP syslog, RFC5424 | Logging target | `<release>-evebox-syslog` Service (`LoadBalancer`) |
+| WAN gateway reachability | Cluster pulls | ICMP echo | WAN gateway IP responds | `blackbox-exporter` `Probe`, rendered on the Connectivity dashboard |
+| NetFlow records | Firewall pushes | UDP 2055 | Reporting → Netflow target | `<release>-akvorado-inlet` Service (`LoadBalancer` by default) |
+| Suricata EVE JSON | Firewall pushes | TCP syslog, RFC5424 | Logging target scoped to `suricata` | `<release>-evebox-syslog` Service (`ClusterIP` by default — publish it) |
 
 What Grafana reads: **Prometheus** for the health and connectivity dashboards,
 **ClickHouse** for the traffic dashboard.
+
+### Dashboard variables
+
+The **OPNsense Health** dashboard carries two instance pickers, because it
+draws on two independent scrape targets:
+
+- **OPNsense Instance** selects the `opnsense_instance` label the exporter
+  stamps on its own metrics — the value of
+  `opnsenseExporter.opnsense.instanceLabel`. It drives the interface, gateway,
+  ARP, service, TCP-state and firewall panels.
+- **Firewall node_exporter Target** selects the `instance` label of the
+  `os-node_exporter` scrape target on the firewall (e.g. `192.168.1.1:9100`).
+  It drives the uptime, temperature, CPU, load, memory, swap, interrupt,
+  filesystem and disk panels.
+
+They are different label spaces and will almost never hold the same string, so
+set both. Two further pickers keep the hardware-specific panels usable on any
+box: **Filesystem Device** scopes the filesystem panel (ZFS datasets, UFS
+mountpoints, whatever the firewall reports) and **Firewall Interface** scopes
+the per-interface firewall panels to your NIC names (`igb*`, `ix*`, `em*`,
+`re*`). Both default to all values.
+
+The **OPNsense Connectivity** dashboard renders gateway status, RTT, jitter and
+loss from the firewall's own dpinger monitoring, plus the cluster-side ICMP
+probe of the WAN gateway when `blackboxExporter.enabled` is true.
 
 **EveBox is its own web UI, not a Grafana datasource.** It stores events in its
 own SQLite database and serves its own alert-triage interface on port 5636. No
@@ -65,8 +93,9 @@ healthy.
 
 ## OPNsense setup
 
-Work through these in order. Steps 1 and 2 are needed for the core install;
-4 through 6 unlock connectivity, NetFlow, and IDS features respectively.
+Work through these in order. Steps 1 and 2 are needed for the core install.
+Step 3 is optional and adds raw Unbound DNS metrics only. Steps 4, 5 and 6
+unlock connectivity, NetFlow, and IDS features respectively.
 
 ### 1. Read-only API user and key
 
@@ -115,11 +144,11 @@ valid but the group is missing a privilege.
 
 ### 2. os-node_exporter plugin
 
-**This step is not optional in practice.** 14 of the 23 panels on the OPNsense
-Health dashboard — uptime, temperature, CPU, load average, memory, swap,
-interrupts, context switches, filesystem, and disk I/O — read `node_*` metrics.
-Without this plugin and its scrape target, most of the health dashboard shows
-"No data".
+**This step is not optional in practice.** Twelve panels on the OPNsense Health
+dashboard — uptime, temperature, CPU usage and utilization, load average,
+memory, swap, interrupts, context switches, filesystem, disk I/O and disk IOPS
+— read `node_*` metrics. Without this plugin and its scrape target, much of the
+health dashboard shows "No data".
 
 1. **Firmware → Plugins** → search `os-node_exporter` → install.
 2. **Services → Prometheus Exporter**: check *Enabled*, set *Listen Address* to
@@ -132,19 +161,21 @@ Without this plugin and its scrape target, most of the health dashboard shows
 The endpoint is unauthenticated by design — the same trust model as any
 node_exporter. Keep it LAN-only through your firewall rules.
 
-### 3. Unbound extended statistics
+### 3. Unbound extended statistics (optional)
+
+`opnsense-exporter` surfaces a narrow slice of Unbound's extended data —
+`opnsense_unbound_*` metrics covering DNSSEC secure and bogus answer counts and
+resolver uptime. That narrow slice is an upstream exporter limitation.
+**No dashboard shipped by this chart renders those metrics, and no alert rule
+uses them.** Turn the setting on if you want to build your own panels or
+queries against them; skip this step otherwise.
 
 **Services → Unbound DNS → Advanced → Logging Settings → Extended
 Statistics** → check → Apply.
 
-This is easy to get wrong: the toggle is not on the General page, and the
-separate *Statistics* sidebar item is display-only — it shows basic counters
-whether or not extended statistics is on, so it cannot be used to verify the
-setting.
-
-`opnsense-exporter` surfaces a narrow slice of the extended data: DNSSEC secure
-and bogus answer counts, and Unbound uptime. That is an upstream exporter
-limitation, and the health dashboard's Unbound panels are scoped to match.
+The toggle is easy to miss: it is not on the General page, and the separate
+*Statistics* sidebar item is display-only — it shows basic counters whether or
+not extended statistics is on, so it cannot be used to verify the setting.
 
 ### 4. Gateway monitoring for internet targets
 
@@ -199,10 +230,22 @@ running on the firewall — this chart assumes IDS is turned on.
 3. **System → Settings → Logging / Targets → +**. Add a target with
    **Transport: TCP**, **Format: RFC5424**, and the hostname/port from step 2
    (port `5140` by default).
+4. **Set *Applications* on that target to `suricata`, and nothing else.** This
+   is not optional tidiness. A logging target left at its default ships *every*
+   application's messages — pf/filterlog, unbound, dhcpd, kernel — to the
+   syslog listener. Those lines are not EVE JSON, so EveBox logs a parse error
+   for each one, and on a busy firewall they arrive at many times the IDS event
+   rate. The spool shares the EveBox PVC with the SQLite database, so an
+   unscoped target inflates both. The Vector sidecar also drops anything whose
+   syslog application name is not `suricata`, but scope the target anyway — no
+   reason to ship the traffic at all.
 
 **TCP is required, not a preference.** EVE lines that carry packet payloads
 exceed the practical UDP datagram size; over UDP they are truncated into
-invalid JSON and silently dropped.
+invalid JSON and silently dropped. Transport is only half of it: the sending
+side has its own maximum syslog message size (syslog-ng's `log_msg_size` on
+OPNsense), which truncates long EVE lines before they ever reach the wire. If
+long events arrive truncated even over TCP, raise that limit on the firewall.
 
 ## IDS alert triage
 
@@ -218,8 +261,8 @@ Two Services are created, deliberately split:
 | `<release>-evebox` | 5636 | Web UI only |
 | `<release>-evebox-syslog` | 5140 | Syslog listener only |
 
-Set `evebox.syslog.service.type: LoadBalancer` so the firewall can reach the
-listener. Reach the **web UI** through `evebox.ingress` or a port-forward.
+Set `evebox.syslog.service.type: LoadBalancer` — it defaults to `ClusterIP`,
+which the firewall cannot reach. Reach the **web UI** through `evebox.ingress` or a port-forward.
 
 The split exists for a reason. EveBox runs with authentication disabled
 (`--no-auth`), so publishing the UI Service on the LAN would put an
@@ -302,7 +345,7 @@ Start from one of the shipped examples:
 | `opnsenseExporter.enabled` | Deploy opnsense-exporter, which polls the OPNsense REST API. |
 | `opnsenseExporter.opnsense.address` | OPNsense firewall address (required). |
 | `opnsenseExporter.opnsense.protocol` | `https` or `http` for the REST API. |
-| `opnsenseExporter.opnsense.instanceLabel` | Value of the `instance` label applied to `opnsense_*` metrics. |
+| `opnsenseExporter.opnsense.instanceLabel` | Value of the `opnsense_instance` label the exporter applies to its `opnsense_*` metrics. It is the value the health dashboard's **OPNsense Instance** picker selects. |
 | `opnsenseExporter.opnsense.insecureSkipVerify` | Skip TLS verification of the firewall's API certificate. |
 | `opnsenseExporter.opnsense.apiKeySecretRef` | Secret reference holding the read-only API key. |
 | `opnsenseExporter.opnsense.apiSecretSecretRef` | Secret reference holding the read-only API secret. |
@@ -317,6 +360,7 @@ Start from one of the shipped examples:
 | `alerts.gatewayDown` | Alert when any gateway's status is not Online, monitor-only entries included. |
 | `alerts.highPacketLoss` | Alert above `thresholdPercent` packet loss on a gateway. |
 | `alerts.highLatency` | Alert above `thresholdMs` round-trip time on a gateway. |
+| `alerts.probeFailed` | Alert when the cluster's ICMP probe of the WAN gateway fails. Rendered only when `blackboxExporter.enabled` is true. |
 | `alerts.akvoradoPipelineLag` | Alert when the Akvorado inlet is receiving flows but the outlet has stopped consuming. |
 | `serviceMonitor.enabled` | Render `ServiceMonitor` objects for the chart's own workloads. |
 | `serviceMonitor.namespace` | Namespace for the ServiceMonitors; defaults to the release namespace. |
@@ -334,7 +378,7 @@ Start from one of the shipped examples:
 | `evebox.enabled` | Deploy EveBox plus its Vector syslog sidecar for Suricata IDS alert triage. Default `false`. |
 | `evebox.service.type` | Service type for the EveBox **web UI**. Keep `ClusterIP` — the UI runs without authentication. |
 | `evebox.service.port` | Port the EveBox web UI listens on. |
-| `evebox.syslog.service.type` | Service type for the syslog listener. Set to `LoadBalancer` so the firewall can ship EVE JSON to it. |
+| `evebox.syslog.service.type` | Service type for the syslog listener. Defaults to `ClusterIP`; set it to `LoadBalancer` so the firewall can ship EVE JSON to it. |
 | `evebox.syslog.service.port` | TCP port the Vector sidecar accepts RFC5424 syslog on, and the port the firewall's logging target uses. |
 | `evebox.syslog.maxMessageBytes` | Maximum accepted syslog message size. EVE lines carrying packet payloads are large, so this is well above Vector's default. |
 | `evebox.ingress.enabled` | Expose the EveBox **web UI** via Ingress. Does not carry syslog. |

@@ -28,7 +28,7 @@ tests:
       - equal:
           path: spec.prober.url
           value: RELEASE-NAME-blackbox-exporter.NAMESPACE.svc.cluster.local:9115
-  - it: emits no vantage label on the target
+  - it: attaches no extra labels to the probe target
     asserts:
       - notExists:
           path: spec.targets.staticConfig.labels

@@ -15,10 +15,17 @@ data:
         address: 0.0.0.0:{{ .Values.evebox.syslog.service.port }}
         mode: tcp
         max_length: {{ int .Values.evebox.syslog.maxMessageBytes }}
+    transforms:
+      suricata_only:
+        type: filter
+        inputs: [eve]
+        condition:
+          type: vrl
+          source: '.appname == "suricata"'
     sinks:
       eve_file:
         type: file
-        inputs: [eve]
+        inputs: [suricata_only]
         path: /var/lib/evebox/spool/eve.json
         encoding:
           codec: text

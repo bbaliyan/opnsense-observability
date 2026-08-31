@@ -232,18 +232,41 @@ tests:
           count: 0
   - it: renders the syslog listener config vector consumes
     template: evebox/vector-configmap.yaml
+    set:
+      evebox.syslog.service.port: 5999
     asserts:
       - isKind:
           of: ConfigMap
       - matchRegex:
           path: data["vector.yaml"]
-          pattern: "address: 0\\.0\\.0\\.0:5140"
+          pattern: "address: 0\\.0\\.0\\.0:5999"
+      - matchRegex:
+          path: data["vector.yaml"]
+          pattern: "(?m)^ *type: syslog$"
+      - matchRegex:
+          path: data["vector.yaml"]
+          pattern: "(?m)^ *mode: tcp$"
+      - matchRegex:
+          path: data["vector.yaml"]
+          pattern: "(?m)^ *codec: text$"
       - matchRegex:
           path: data["vector.yaml"]
           pattern: "(?m)^ *max_length: 1048576$"
       - matchRegex:
           path: data["vector.yaml"]
           pattern: "path: /var/lib/evebox/spool/eve\\.json"
+  - it: keeps everything but suricata out of the EVE spool
+    template: evebox/vector-configmap.yaml
+    asserts:
+      - matchRegex:
+          path: data["vector.yaml"]
+          pattern: "(?m)^ *source: '\\.appname == \"suricata\"'$"
+      - matchRegex:
+          path: data["vector.yaml"]
+          pattern: "(?m)^ *inputs: \\[suricata_only\\]$"
+      - matchRegex:
+          path: data["vector.yaml"]
+          pattern: "(?m)^ *inputs: \\[eve\\]$"
   - it: renders no vector config when evebox is disabled
     template: evebox/vector-configmap.yaml
     set:
