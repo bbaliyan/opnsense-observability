@@ -1,0 +1,25 @@
+{{- if .Values.evebox.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-evebox-syslog
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: evebox
+data:
+  vector.yaml: |
+    data_dir: /vector-data
+    sources:
+      eve:
+        type: syslog
+        address: 0.0.0.0:{{ .Values.evebox.service.syslogPort }}
+        mode: tcp
+        max_length: {{ int .Values.evebox.syslog.maxMessageBytes }}
+    sinks:
+      eve_file:
+        type: file
+        inputs: [eve]
+        path: /var/log/suricata/eve.json
+        encoding:
+          codec: text
+{{- end }}

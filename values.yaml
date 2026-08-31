@@ -126,10 +126,8 @@ akvorado:
     requests: {cpu: 50m, memory: 128Mi}
     limits: {memory: 1Gi}
 
-# -- EveBox: Suricata IDS alert triage UI, backed by embedded SQLite (no
-# Elasticsearch/Kafka). Off by default. The EveBox Agent runs on OPNsense
-# itself (not part of this chart) and ships Suricata EVE JSON to this
-# Service over plain HTTP — see README prerequisites.
+# -- evebox: Suricata IDS alert triage. Receives EVE JSON shipped from the
+# firewall's native syslog output and stores it in SQLite.
 evebox:
   enabled: false
   image:
@@ -139,6 +137,16 @@ evebox:
   service:
     type: ClusterIP
     port: 5636
+    syslogPort: 5140
+  syslog:
+    image:
+      repository: timberio/vector
+      tag: "0.44.0-alpine"
+      pullPolicy: IfNotPresent
+    maxMessageBytes: 1048576
+    resources:
+      requests: {cpu: 25m, memory: 64Mi}
+      limits: {memory: 128Mi}
   ingress:
     enabled: false
     className: ""

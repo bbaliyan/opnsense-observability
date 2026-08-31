@@ -10,8 +10,7 @@ spec:
   replicas: 1
   # RollingUpdate would schedule the replacement pod before terminating the
   # current one; with a single replica sharing the ReadWriteOnce data PVC,
-  # that can deadlock on a multi-attach error (the same failure mode Plan
-  # 2's review found on the Akvorado outlet Deployment).
+  # that can deadlock on a multi-attach error.
   strategy:
     type: Recreate
   selector:
@@ -23,13 +22,15 @@ spec:
       labels:
         {{- include "opnsense-observability.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: evebox
+      annotations:
+        checksum/syslog-config: {{ include (print $.Template.BasePath "/evebox/vector-configmap.yaml") . | sha256sum }}
     spec:
       containers:
         - name: evebox
           image: "{{ .Values.evebox.image.repository }}:{{ .Values.evebox.image.tag }}"
           imagePullPolicy: {{ .Values.evebox.image.pullPolicy }}
           # No pod-level runAsNonRoot: the upstream image has no non-root
-          # user (uid=0 always) - see Global Constraints.
+          # user (uid=0 always).
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -44,12 +45,17 @@ spec:
             - {{ .Values.evebox.service.port | quote }}
             - -D
             - /var/lib/evebox
+            - --input
+            - /var/log/suricata/eve.json
+            - --end
           ports:
             - name: http
               containerPort: {{ .Values.evebox.service.port }}
           volumeMounts:
             - name: data
               mountPath: /var/lib/evebox
+            - name: eve
+              mountPath: /var/log/suricata
           readinessProbe:
             httpGet:
               path: /
@@ -64,8 +70,37 @@ spec:
             periodSeconds: 30
           resources:
             {{- toYaml .Values.evebox.resources | nindent 12 }}
+        - name: syslog
+          image: "{{ .Values.evebox.syslog.image.repository }}:{{ .Values.evebox.syslog.image.tag }}"
+          imagePullPolicy: {{ .Values.evebox.syslog.image.pullPolicy }}
+          args: ["--config", "/etc/vector/vector.yaml"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - name: syslog
+              containerPort: {{ .Values.evebox.service.syslogPort }}
+              protocol: TCP
+          volumeMounts:
+            - name: eve
+              mountPath: /var/log/suricata
+            - name: vector-config
+              mountPath: /etc/vector
+              readOnly: true
+            - name: vector-data
+              mountPath: /vector-data
+          resources:
+            {{- toYaml .Values.evebox.syslog.resources | nindent 12 }}
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: {{ include "opnsense-observability.fullname" . }}-evebox
+        - name: eve
+          emptyDir: {}
+        - name: vector-data
+          emptyDir: {}
+        - name: vector-config
+          configMap:
+            name: {{ include "opnsense-observability.fullname" . }}-evebox-syslog
 {{- end }}
