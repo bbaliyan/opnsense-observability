@@ -1,8 +1,9 @@
-# Full install: everything from minimal-values.yaml, plus Akvorado NetFlow
+# Full install: everything in minimal-values.yaml, plus Akvorado NetFlow
 # traffic analytics (Redpanda + ClickHouse + traffic dashboard) and EveBox
 # IDS alert triage. Point OPNsense's NetFlow export at the akvorado-inlet
-# Service, and the IDS plugin's EVE syslog output at the evebox-syslog Service —
-# both created by this file. See README prerequisites.
+# Service and the IDS plugin's EVE syslog output at the evebox-syslog
+# Service — both published as LoadBalancers by this file. See the README's
+# OPNsense setup section.
 opnsenseExporter:
   opnsense:
     protocol: https
@@ -35,7 +36,9 @@ evebox:
   enabled: true
   syslog:
     service:
-      type: LoadBalancer   # OPNsense needs a routable syslog target
+      type: LoadBalancer   # the firewall ships EVE JSON here over TCP syslog
+  # The web UI runs without authentication, so it stays on a ClusterIP
+  # Service and is reached through the Ingress below.
   ingress:
     enabled: true
     className: nginx

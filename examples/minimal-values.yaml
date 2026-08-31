@@ -1,5 +1,5 @@
-# Minimal install: opnsense-exporter + blackbox-exporter + connectivity/
-# health dashboards + core alerts. No Akvorado, no EveBox.
+# Core install: opnsense-exporter, blackbox-exporter, the health and
+# connectivity dashboards, and the core alert rules. No Akvorado, no EveBox.
 opnsenseExporter:
   opnsense:
     protocol: https
@@ -10,7 +10,7 @@ opnsenseExporter:
 
 blackboxExporter:
   enabled: true
-  wanGatewayAddress: "203.0.113.1"    # replace with your actual WAN gateway
+  wanGatewayAddress: "203.0.113.1"    # required whenever enabled is true
   probeSelectorLabels:
     release: kube-prometheus-stack     # match your cluster's Prometheus probeSelector
 
