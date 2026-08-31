@@ -10,8 +10,8 @@ Full design spec: `docs/superpowers/specs/2026-08-30-opnsense-observability-desi
 ## Status
 
 Core slice (`opnsense-exporter`, `blackbox-exporter`, connectivity/health
-dashboards, alerts) and NetFlow traffic analytics (Akvorado) implemented.
-IDS alert triage (EveBox) implemented.
+dashboards, alerts), NetFlow traffic analytics (Akvorado), and IDS alert
+triage (EveBox) all implemented.
 
 ## Prerequisites
 
