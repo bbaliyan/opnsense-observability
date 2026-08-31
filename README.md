@@ -5,7 +5,7 @@ alerts, dual-vantage-point internet connectivity, NetFlow traffic
 analytics, and IDS alert triage — as a Helm chart for a cluster that
 already runs a Prometheus Operator and Grafana.
 
-Full design spec: `docs/superpowers/specs/2026-08-30-opnsense-observability-design.md`.
+Full design spec: `docs/design.md`.
 
 ## Status
 
