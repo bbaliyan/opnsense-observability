@@ -24,6 +24,11 @@ tests:
       - lengthEqual:
           path: spec.groups[0].rules
           count: 4
+  - it: alerts on every gateway, including the monitor-only internet ones
+    asserts:
+      - equal:
+          path: spec.groups[0].rules[1].expr
+          value: opnsense_gateways_status != 1
   - it: omits the firmware alert when disabled
     set:
       alerts.firmwareUpdateAvailable.enabled: false

@@ -24,7 +24,7 @@ spec:
         {{- end }}
         {{- if .Values.alerts.gatewayDown.enabled }}
         - alert: OPNsenseGatewayDown
-          expr: opnsense_gateways_status{name!~"MONITOR_.*"} != 1
+          expr: opnsense_gateways_status != 1
           for: 2m
           labels:
             severity: {{ .Values.alerts.gatewayDown.severity }}
