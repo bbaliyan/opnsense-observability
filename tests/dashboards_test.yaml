@@ -11,20 +11,64 @@ tests:
       - equal:
           path: metadata.labels.grafana_dashboard
           value: "1"
-      - matchRegex:
+      - exists:
           path: data["connectivity.json"]
-          pattern: "state-timeline"
-      - matchRegex:
-          path: data["connectivity.json"]
-          pattern: "opnsense_gateways_status\\{name=~..\\$gateway"
-      - notMatchRegex:
-          path: data["connectivity.json"]
-          pattern: "probe_success"
-      - notMatchRegex:
-          path: data["connectivity.json"]
-          pattern: "MONITOR_CLOUDFLARE"
-  - it: renders nothing when dashboards are disabled
+  - it: queries every dpinger metric the connectivity panels need
     template: dashboards/connectivity-dashboard.yaml
+    asserts:
+      - matchRegex:
+          path: data["connectivity.json"]
+          pattern: opnsense_gateways_status\{name=~\\"\$gateway\\"\}
+      - matchRegex:
+          path: data["connectivity.json"]
+          pattern: opnsense_gateways_rtt_milliseconds\{name=~\\"\$gateway\\"\}
+      - matchRegex:
+          path: data["connectivity.json"]
+          pattern: opnsense_gateways_rttd_milliseconds\{name=~\\"\$gateway\\"\}
+      - matchRegex:
+          path: data["connectivity.json"]
+          pattern: opnsense_gateways_loss_percentage\{name=~\\"\$gateway\\"\}
+      - notMatchRegex:
+          path: data["connectivity.json"]
+          pattern: probe_success
+  - it: maps all three gateway states so an unknown gateway never reads as healthy
+    template: dashboards/connectivity-dashboard.yaml
+    asserts:
+      - matchRegex:
+          path: data["connectivity.json"]
+          pattern: '"2": \{"text": "Unknown", "color": "yellow"'
+      - matchRegex:
+          path: data["connectivity.json"]
+          pattern: '"showValue": "auto"'
+  - it: resolves every connectivity datasource through the DS_PROMETHEUS variable
+    template: dashboards/connectivity-dashboard.yaml
+    asserts:
+      - notMatchRegex:
+          path: data["connectivity.json"]
+          pattern: '"type": "prometheus",\s*"uid": "[^$]'
+      - matchRegex:
+          path: data["connectivity.json"]
+          pattern: '"query": "label_values\(opnsense_gateways_status, name\)"'
+  - it: renders the health dashboard ConfigMap with the sidecar label
+    template: dashboards/opnsense-health-dashboard.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.labels.grafana_dashboard
+          value: "1"
+      - exists:
+          path: data["opnsense-health.json"]
+  - it: resolves every health datasource through the DS_PROMETHEUS variable
+    template: dashboards/opnsense-health-dashboard.yaml
+    asserts:
+      - notMatchRegex:
+          path: data["opnsense-health.json"]
+          pattern: '"type": "prometheus",\s*"uid": "[^$]'
+      - notMatchRegex:
+          path: data["opnsense-health.json"]
+          pattern: __inputs|__requires
+  - it: renders nothing when dashboards are disabled
     set:
       dashboards.enabled: false
     asserts:

@@ -32,12 +32,12 @@ tests:
     asserts:
       - notExists:
           path: spec.targets.staticConfig.labels
-  - it: renders nothing when no WAN gateway address is set
+  - it: fails the render when no WAN gateway address is set
     set:
       blackboxExporter.wanGatewayAddress: ""
     asserts:
-      - hasDocuments:
-          count: 0
+      - failedTemplate:
+          errorMessage: blackboxExporter.wanGatewayAddress is required when blackboxExporter.enabled is true
   - it: renders nothing when blackboxExporter is disabled
     set:
       blackboxExporter.enabled: false

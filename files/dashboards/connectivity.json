@@ -25,11 +25,7 @@
         "type": "query",
         "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
         "definition": "label_values(opnsense_gateways_status, name)",
-        "query": {
-          "qryType": 1,
-          "query": "label_values(opnsense_gateways_status, name)",
-          "refId": "GatewayVariableQuery"
-        },
+        "query": "label_values(opnsense_gateways_status, name)",
         "refresh": 2,
         "sort": 1,
         "multi": true,
@@ -59,7 +55,7 @@
       ],
       "options": {
         "mergeValues": true,
-        "showValue": "never",
+        "showValue": "auto",
         "alignValue": "center",
         "rowHeight": 0.9,
         "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true},
@@ -67,13 +63,16 @@
       },
       "fieldConfig": {
         "defaults": {
+          "min": 0,
+          "max": 2,
           "color": {"mode": "thresholds"},
           "custom": {"fillOpacity": 70, "lineWidth": 0, "spanNulls": false},
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {"color": "red", "value": null},
-              {"color": "green", "value": 1}
+              {"color": "green", "value": 1},
+              {"color": "yellow", "value": 2}
             ]
           },
           "mappings": [
@@ -81,7 +80,8 @@
               "type": "value",
               "options": {
                 "0": {"text": "Offline", "color": "red", "index": 0},
-                "1": {"text": "Online", "color": "green", "index": 1}
+                "1": {"text": "Online", "color": "green", "index": 1},
+                "2": {"text": "Unknown", "color": "yellow", "index": 2}
               }
             }
           ]
