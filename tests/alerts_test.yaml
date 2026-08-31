@@ -39,22 +39,6 @@ tests:
       - lengthEqual:
           path: spec.groups[0].rules
           count: 3
-  - it: renders the WAN gateway probe alert only when blackbox-exporter is enabled
-    set:
-      blackboxExporter.enabled: true
-      blackboxExporter.wanGatewayAddress: "10.20.30.1"
-    asserts:
-      - equal:
-          path: spec.groups[0].rules[4].alert
-          value: OPNsenseWANGatewayProbeFailed
-      - equal:
-          path: spec.groups[0].rules[4].expr
-          value: probe_success{job="opnsense-wan-gateway"} == 0
-  - it: omits the WAN gateway probe alert when blackbox-exporter is off
-    asserts:
-      - lengthEqual:
-          path: spec.groups[0].rules
-          count: 4
   - it: renders nothing when alerts are disabled globally
     set:
       alerts.enabled: false

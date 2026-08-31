@@ -50,16 +50,6 @@ spec:
           annotations:
             summary: "Latency to {{ "{{" }} $labels.name {{ "}}" }} exceeds {{ .Values.alerts.highLatency.thresholdMs }}ms"
         {{- end }}
-        {{- if and .Values.blackboxExporter.enabled .Values.alerts.probeFailed.enabled }}
-        - alert: OPNsenseWANGatewayProbeFailed
-          expr: probe_success{job="opnsense-wan-gateway"} == 0
-          for: 2m
-          labels:
-            severity: {{ .Values.alerts.probeFailed.severity }}
-          annotations:
-            summary: "ICMP probe of the OPNsense WAN gateway {{ "{{" }} $labels.instance {{ "}}" }} is failing"
-            description: "blackbox-exporter has been unable to ping the WAN gateway from inside the cluster for at least 2 minutes."
-        {{- end }}
         {{- if and .Values.akvorado.enabled .Values.alerts.akvoradoPipelineLag.enabled }}
         - alert: AkvoradoPipelineLag
           expr: rate(akvorado_outlet_kafka_records_consumed_total[5m]) == 0 and rate(akvorado_inlet_flow_input_udp_packets_total[5m]) > 0

@@ -14,11 +14,6 @@ keywords:
   - prometheus
   - grafana
 dependencies:
-  - name: prometheus-blackbox-exporter
-    version: "11.17.2"
-    repository: https://prometheus-community.github.io/helm-charts
-    alias: blackbox-exporter
-    condition: blackboxExporter.enabled
   - name: redpanda
     version: "26.2.1"
     repository: https://charts.redpanda.com

@@ -17,9 +17,6 @@ jobs:
         with:
           version: v4.2.4
 
-      - name: Add prometheus-community repo
-        run: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-
       - name: Add redpanda repo
         run: helm repo add redpanda https://charts.redpanda.com
 

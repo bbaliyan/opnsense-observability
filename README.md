@@ -8,8 +8,8 @@ Prometheus alert rules.
 
 ## Requirements
 
-- A **Prometheus Operator** in the cluster, providing the `ServiceMonitor`,
-  `PrometheusRule`, and `Probe` CRDs.
+- A **Prometheus Operator** in the cluster, providing the `ServiceMonitor`
+  and `PrometheusRule` CRDs.
 - A **Grafana** that loads dashboards from ConfigMaps via the dashboard sidecar
   convention (`grafana_dashboard: "1"` label).
 
@@ -48,7 +48,6 @@ single most common setup mistake.
 | --- | --- | --- | --- | --- |
 | System, service, firmware, gateway, Unbound metrics | Cluster pulls | HTTPS 443 (REST API) | Read-only API user + key | `opnsense-exporter` Deployment, scraped via ServiceMonitor |
 | Host CPU / memory / disk / load | Cluster pulls | HTTP 9100 | `os-node_exporter` plugin | Prometheus scrape of an `extraObjects` Service + Endpoints |
-| WAN gateway reachability | Cluster pulls | ICMP echo | WAN gateway IP responds | `blackbox-exporter` `Probe`, rendered on the Connectivity dashboard |
 | NetFlow records | Firewall pushes | UDP 2055 | Reporting → Netflow target | `<release>-akvorado-inlet` Service (`LoadBalancer` by default) |
 | Suricata EVE JSON | Firewall pushes | TCP syslog, RFC5424 | Logging target scoped to `suricata` | `<release>-evebox-syslog` Service (`ClusterIP` by default — publish it) |
 
@@ -77,8 +76,7 @@ the per-interface firewall panels to your NIC names (`igb*`, `ix*`, `em*`,
 `re*`). Both default to all values.
 
 The **OPNsense Connectivity** dashboard renders gateway status, RTT, jitter and
-loss from the firewall's own dpinger monitoring, plus the cluster-side ICMP
-probe of the WAN gateway when `blackboxExporter.enabled` is true.
+loss from the firewall's own dpinger monitoring.
 
 **EveBox is its own web UI, not a Grafana datasource.** It stores events in its
 own SQLite database and serves its own alert-triage interface on port 5636. No
@@ -322,7 +320,6 @@ single-node ClickHouse.
 ## Installation
 
 ```bash
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo add redpanda https://charts.redpanda.com
 helm dependency build .
 
@@ -333,8 +330,7 @@ helm install opnsense-observability . \
 
 Start from one of the shipped examples:
 
-- `examples/minimal-values.yaml` — opnsense-exporter, blackbox-exporter,
-  dashboards, and alerts.
+- `examples/minimal-values.yaml` — opnsense-exporter, dashboards, and alerts.
 - `examples/full-values.yaml` — everything, including Akvorado NetFlow
   analytics and EveBox IDS triage.
 
@@ -349,10 +345,6 @@ Start from one of the shipped examples:
 | `opnsenseExporter.opnsense.insecureSkipVerify` | Skip TLS verification of the firewall's API certificate. |
 | `opnsenseExporter.opnsense.apiKeySecretRef` | Secret reference holding the read-only API key. |
 | `opnsenseExporter.opnsense.apiSecretSecretRef` | Secret reference holding the read-only API secret. |
-| `blackboxExporter.enabled` | Deploy blackbox-exporter and a `Probe` that ICMP-pings the WAN gateway from inside the cluster. Default `false`. Requires `blackboxExporter.wanGatewayAddress`; enabling it without one fails the install. |
-| `blackboxExporter.wanGatewayAddress` | OPNsense WAN gateway IP to probe. Required whenever `blackboxExporter.enabled` is true. |
-| `blackboxExporter.scrapeInterval` | Probe interval for the WAN gateway check. |
-| `blackboxExporter.probeSelectorLabels` | Labels matching the cluster Prometheus's `probeSelector`. |
 | `dashboards.enabled` | Render the Grafana dashboard ConfigMaps. |
 | `dashboards.folder` | Grafana folder the dashboards are filed under. |
 | `alerts.enabled` | Render the `PrometheusRule`. |
@@ -360,7 +352,6 @@ Start from one of the shipped examples:
 | `alerts.gatewayDown` | Alert when any gateway's status is not Online, monitor-only entries included. |
 | `alerts.highPacketLoss` | Alert above `thresholdPercent` packet loss on a gateway. |
 | `alerts.highLatency` | Alert above `thresholdMs` round-trip time on a gateway. |
-| `alerts.probeFailed` | Alert when the cluster's ICMP probe of the WAN gateway fails. Rendered only when `blackboxExporter.enabled` is true. |
 | `alerts.akvoradoPipelineLag` | Alert when the Akvorado inlet is receiving flows but the outlet has stopped consuming. |
 | `serviceMonitor.enabled` | Render `ServiceMonitor` objects for the chart's own workloads. |
 | `serviceMonitor.namespace` | Namespace for the ServiceMonitors; defaults to the release namespace. |
@@ -386,7 +377,7 @@ Start from one of the shipped examples:
 | `extraObjects` | Escape hatch for arbitrary extra manifests rendered alongside this chart (see below). |
 
 See `values.yaml` for the full set of keys, including image, resource, and
-passthrough values for the `blackbox-exporter` and `redpanda` subcharts.
+passthrough values for the `redpanda` subchart.
 
 ## Scraping os-node_exporter on the firewall
 

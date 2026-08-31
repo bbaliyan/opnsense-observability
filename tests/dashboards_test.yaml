@@ -28,12 +28,6 @@ tests:
       - matchRegex:
           path: data["connectivity.json"]
           pattern: opnsense_gateways_loss_percentage\{name=~\\"\$gateway\\"\}
-      - matchRegex:
-          path: data["connectivity.json"]
-          pattern: probe_success\{job=\\"opnsense-wan-gateway\\"\}
-      - matchRegex:
-          path: data["connectivity.json"]
-          pattern: probe_duration_seconds\{job=\\"opnsense-wan-gateway\\"\}
   - it: maps all three gateway states so an unknown gateway never reads as healthy
     template: dashboards/connectivity-dashboard.yaml
     asserts:

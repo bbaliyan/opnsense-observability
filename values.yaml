@@ -25,49 +25,18 @@ opnsenseExporter:
     requests: {cpu: 10m, memory: 32Mi}
     limits: {memory: 64Mi}
 
-# -- blackbox-exporter: ICMP probe of the OPNsense WAN gateway from inside the
-# cluster. Internet reachability is measured by the firewall's own gateway
-# monitoring and read through opnsense-exporter.
-blackboxExporter:
-  enabled: false
-  scrapeInterval: 10s
-  wanGatewayAddress: ""           # OPNsense WAN gateway IP, user-supplied
-  probeSelectorLabels: {}         # must match the cluster Prometheus's probeSelector
-
-# -- Passthrough values for the prometheus-blackbox-exporter subchart
-# (aliased "blackbox-exporter" in Chart.yaml). ICMP needs NET_RAW, which
-# the subchart ships commented out by default.
-blackbox-exporter:
-  config:
-    modules:
-      icmp:
-        prober: icmp
-        timeout: 5s
-        icmp:
-          preferred_ip_protocol: "ip4"
-  securityContext:
-    runAsUser: 0
-    runAsGroup: 0
-    readOnlyRootFilesystem: true
-    runAsNonRoot: false
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop: ["ALL"]
-      add: ["NET_RAW"]
-
 # -- Grafana dashboard ConfigMaps picked up by the dashboard sidecar.
 dashboards:
   enabled: true
   folder: "OPNsense"
 
-# -- PrometheusRule alerting on firmware, gateway, probe and pipeline health.
+# -- PrometheusRule alerting on firmware, gateway and pipeline health.
 alerts:
   enabled: true
   firmwareUpdateAvailable: {enabled: true, severity: warning}
   gatewayDown: {enabled: true, severity: critical}
   highPacketLoss: {enabled: true, thresholdPercent: 5, severity: warning}
   highLatency: {enabled: true, thresholdMs: 150, severity: warning}
-  probeFailed: {enabled: true, severity: critical}
   akvoradoPipelineLag: {enabled: true, severity: warning}
 
 # -- ServiceMonitor objects for this chart's own workloads.

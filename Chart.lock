@@ -1,9 +1,6 @@
 dependencies:
-- name: prometheus-blackbox-exporter
-  repository: https://prometheus-community.github.io/helm-charts
-  version: 11.17.2
 - name: redpanda
   repository: https://charts.redpanda.com
   version: 26.2.1
-digest: sha256:e13009ce79d3d6e1015cc5e28460f6ab422d754e2bb47b527682510fa3832d10
-generated: "2026-08-30T22:05:30.827198+10:00"
+digest: sha256:e7e7538ee3b3da11e1f2dd16a82dd89b8d1945aab2fa4df66ea55fa57df0ca26
+generated: "2026-09-01T09:29:41.973619+10:00"
