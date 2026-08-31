@@ -2,6 +2,7 @@ suite: evebox
 templates:
   - evebox/deployment.yaml
   - evebox/service.yaml
+  - evebox/syslog-service.yaml
   - evebox/pvc.yaml
   - evebox/ingress.yaml
   - evebox/vector-configmap.yaml
@@ -39,7 +40,7 @@ tests:
           value: jasonish/evebox:0.28.0
       - equal:
           path: spec.template.spec.containers[0].args
-          value: ["--sqlite", "--no-auth", "--no-tls", "--host", "0.0.0.0", "--port", "5636", "-D", "/var/lib/evebox", "--input", "/var/log/suricata/eve.json", "--end"]
+          value: ["--sqlite", "--no-auth", "--no-tls", "--host", "0.0.0.0", "--port", "5636", "-D", "/var/lib/evebox", "--input", "/var/lib/evebox/spool/eve.json"]
       - notExists:
           path: spec.template.spec.containers[0].command
   - it: uses Recreate strategy to avoid deadlocking on the RWO data PVC
@@ -116,7 +117,41 @@ tests:
       - matchRegex:
           path: spec.template.spec.containers[1].image
           pattern: "^timberio/vector:"
-  - it: points the evebox server at the file vector writes
+      - equal:
+          path: spec.template.spec.containers[1].args
+          value: ["--config", "/etc/vector/vector.yaml"]
+      - equal:
+          path: spec.template.spec.containers[1].ports[0].name
+          value: syslog
+      - equal:
+          path: spec.template.spec.containers[1].ports[0].containerPort
+          value: 5140
+      - equal:
+          path: spec.template.spec.containers[1].volumeMounts
+          value:
+            - name: data
+              mountPath: /var/lib/evebox
+            - name: vector-config
+              mountPath: /etc/vector
+              readOnly: true
+            - name: vector-data
+              mountPath: /vector-data
+  - it: mounts the vector sidecar config from the ConfigMap by name
+    template: evebox/deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[2].name
+          value: vector-config
+      - equal:
+          path: spec.template.spec.volumes[2].configMap.name
+          value: RELEASE-NAME-opnsense-observability-evebox-syslog
+  - it: names the vector ConfigMap what the deployment mounts
+    template: evebox/vector-configmap.yaml
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-opnsense-observability-evebox-syslog
+  - it: points the evebox server at the spool file vector writes on the PVC
     template: evebox/deployment.yaml
     asserts:
       - contains:
@@ -124,34 +159,77 @@ tests:
           content: --input
       - contains:
           path: spec.template.spec.containers[0].args
-          content: /var/log/suricata/eve.json
-      - contains:
+          content: /var/lib/evebox/spool/eve.json
+      - notContains:
           path: spec.template.spec.containers[0].args
           content: --end
-  - it: shares the eve volume between both containers
+  - it: spools onto the data PVC shared by both containers, not an emptyDir
     template: evebox/deployment.yaml
     asserts:
       - equal:
-          path: spec.template.spec.containers[0].volumeMounts[1].name
-          value: eve
+          path: spec.template.spec.containers[0].volumeMounts
+          value:
+            - name: data
+              mountPath: /var/lib/evebox
       - equal:
-          path: spec.template.spec.containers[1].volumeMounts[0].name
-          value: eve
+          path: spec.template.spec.volumes[0].name
+          value: data
       - equal:
-          path: spec.template.spec.containers[1].volumeMounts[0].mountPath
-          value: /var/log/suricata
-  - it: exposes the syslog port on the service
+          path: spec.template.spec.volumes[0].persistentVolumeClaim.claimName
+          value: RELEASE-NAME-opnsense-observability-evebox
+      - lengthEqual:
+          path: spec.template.spec.volumes
+          count: 3
+  - it: keeps the unauthenticated UI Service free of the syslog port
     template: evebox/service.yaml
     asserts:
+      - lengthEqual:
+          path: spec.ports
+          count: 1
       - equal:
-          path: spec.ports[1].name
+          path: spec.ports[0].name
+          value: http
+  - it: carries syslog on a separate Service that can be published alone
+    template: evebox/syslog-service.yaml
+    set:
+      evebox.syslog.service.type: LoadBalancer
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-opnsense-observability-evebox-syslog
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+      - lengthEqual:
+          path: spec.ports
+          count: 1
+      - equal:
+          path: spec.ports[0].name
           value: syslog
       - equal:
-          path: spec.ports[1].port
+          path: spec.ports[0].port
           value: 5140
       - equal:
-          path: spec.ports[1].protocol
+          path: spec.ports[0].targetPort
+          value: syslog
+      - equal:
+          path: spec.ports[0].protocol
           value: TCP
+  - it: defaults the syslog Service to ClusterIP
+    template: evebox/syslog-service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: ClusterIP
+  - it: renders no syslog Service when evebox is disabled
+    template: evebox/syslog-service.yaml
+    set:
+      evebox.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
   - it: renders the syslog listener config vector consumes
     template: evebox/vector-configmap.yaml
     asserts:
@@ -165,7 +243,7 @@ tests:
           pattern: "(?m)^ *max_length: 1048576$"
       - matchRegex:
           path: data["vector.yaml"]
-          pattern: "path: /var/log/suricata/eve\\.json"
+          pattern: "path: /var/lib/evebox/spool/eve\\.json"
   - it: renders no vector config when evebox is disabled
     template: evebox/vector-configmap.yaml
     set:

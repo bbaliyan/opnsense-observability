@@ -46,16 +46,13 @@ spec:
             - -D
             - /var/lib/evebox
             - --input
-            - /var/log/suricata/eve.json
-            - --end
+            - /var/lib/evebox/spool/eve.json
           ports:
             - name: http
               containerPort: {{ .Values.evebox.service.port }}
           volumeMounts:
             - name: data
               mountPath: /var/lib/evebox
-            - name: eve
-              mountPath: /var/log/suricata
           readinessProbe:
             httpGet:
               path: /
@@ -80,11 +77,11 @@ spec:
               drop: ["ALL"]
           ports:
             - name: syslog
-              containerPort: {{ .Values.evebox.service.syslogPort }}
+              containerPort: {{ .Values.evebox.syslog.service.port }}
               protocol: TCP
           volumeMounts:
-            - name: eve
-              mountPath: /var/log/suricata
+            - name: data
+              mountPath: /var/lib/evebox
             - name: vector-config
               mountPath: /etc/vector
               readOnly: true
@@ -96,8 +93,6 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: {{ include "opnsense-observability.fullname" . }}-evebox
-        - name: eve
-          emptyDir: {}
         - name: vector-data
           emptyDir: {}
         - name: vector-config

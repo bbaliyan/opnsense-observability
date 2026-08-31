@@ -131,12 +131,16 @@ evebox:
   service:
     type: ClusterIP
     port: 5636
-    syslogPort: 5140
   syslog:
     image:
       repository: timberio/vector
       tag: "0.44.0-alpine"
       pullPolicy: IfNotPresent
+    service:
+      # The web UI runs with authentication disabled, so it stays on the
+      # ClusterIP Service above; only this one should be published on the LAN.
+      type: ClusterIP
+      port: 5140
     maxMessageBytes: 1048576
     resources:
       requests: {cpu: 25m, memory: 64Mi}

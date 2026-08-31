@@ -1,0 +1,19 @@
+{{- if .Values.evebox.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-evebox-syslog
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: evebox
+spec:
+  type: {{ .Values.evebox.syslog.service.type }}
+  selector:
+    {{- include "opnsense-observability.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: evebox
+  ports:
+    - name: syslog
+      port: {{ .Values.evebox.syslog.service.port }}
+      targetPort: syslog
+      protocol: TCP
+{{- end }}

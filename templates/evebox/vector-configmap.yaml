@@ -12,14 +12,14 @@ data:
     sources:
       eve:
         type: syslog
-        address: 0.0.0.0:{{ .Values.evebox.service.syslogPort }}
+        address: 0.0.0.0:{{ .Values.evebox.syslog.service.port }}
         mode: tcp
         max_length: {{ int .Values.evebox.syslog.maxMessageBytes }}
     sinks:
       eve_file:
         type: file
         inputs: [eve]
-        path: /var/log/suricata/eve.json
+        path: /var/lib/evebox/spool/eve.json
         encoding:
           codec: text
 {{- end }}

@@ -36,10 +36,6 @@ evebox:
   enabled: true
   persistence:
     size: 1Gi
-  syslog:
-    resources:
-      requests: {cpu: 25m, memory: 64Mi}
-      limits: {memory: 128Mi}
   resources:
     requests: {cpu: 50m, memory: 128Mi}
     limits: {memory: 256Mi}
