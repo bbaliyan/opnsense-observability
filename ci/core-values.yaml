@@ -8,6 +8,7 @@ opnsenseExporter:
     apiSecretSecretRef: {name: "ci-dummy-secret", key: "api-secret"}
 
 blackboxExporter:
+  enabled: true
   wanGatewayAddress: "10.0.0.1"
 
 extraObjects: []

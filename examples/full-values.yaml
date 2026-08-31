@@ -12,6 +12,7 @@ opnsenseExporter:
     apiSecretSecretRef: {name: "opnsense-observability-opnsense-api", key: "api-secret"}
 
 blackboxExporter:
+  enabled: true
   wanGatewayAddress: "203.0.113.1"
   probeSelectorLabels:
     release: kube-prometheus-stack

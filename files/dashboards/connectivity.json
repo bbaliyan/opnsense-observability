@@ -1,19 +1,42 @@
 {
-  "title": "OPNsense / Connectivity",
+  "title": "OPNsense Connectivity",
   "uid": "opnsense-connectivity",
-  "schemaVersion": 39,
+  "schemaVersion": 41,
   "version": 1,
   "editable": true,
   "timezone": "browser",
   "time": {"from": "now-6h", "to": "now"},
   "refresh": "30s",
+  "tags": ["opnsense"],
   "templating": {
     "list": [
       {
-        "name": "datasource",
+        "name": "DS_PROMETHEUS",
+        "label": "Prometheus",
         "type": "datasource",
         "query": "prometheus",
+        "refresh": 1,
+        "hide": 0,
         "current": {}
+      },
+      {
+        "name": "gateway",
+        "label": "Gateway",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "definition": "label_values(opnsense_gateways_status, name)",
+        "query": {
+          "qryType": 1,
+          "query": "label_values(opnsense_gateways_status, name)",
+          "refId": "GatewayVariableQuery"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {},
+        "options": []
       }
     ]
   },
@@ -21,74 +44,159 @@
     {
       "id": 1,
       "type": "state-timeline",
-      "title": "Connectivity — cluster vantage point",
-      "gridPos": {"h": 6, "w": 24, "x": 0, "y": 0},
-      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "title": "Gateway status",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
       "targets": [
         {
-          "expr": "probe_success{job=\"opnsense-connectivity-cluster\"}",
-          "legendFormat": "{{instance}}"
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "editorMode": "code",
+          "expr": "opnsense_gateways_status{name=~\"$gateway\"}",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
         }
       ],
+      "options": {
+        "mergeValues": true,
+        "showValue": "never",
+        "alignValue": "center",
+        "rowHeight": 0.9,
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true},
+        "tooltip": {"mode": "single", "sort": "none"}
+      },
       "fieldConfig": {
         "defaults": {
+          "color": {"mode": "thresholds"},
+          "custom": {"fillOpacity": 70, "lineWidth": 0, "spanNulls": false},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "green", "value": 1}
+            ]
+          },
           "mappings": [
-            {"type": "value", "options": {"0": {"text": "down", "color": "red"}}},
-            {"type": "value", "options": {"1": {"text": "up", "color": "green"}}}
+            {
+              "type": "value",
+              "options": {
+                "0": {"text": "Offline", "color": "red", "index": 0},
+                "1": {"text": "Online", "color": "green", "index": 1}
+              }
+            }
           ]
-        }
+        },
+        "overrides": []
       }
     },
     {
       "id": 2,
-      "type": "state-timeline",
-      "title": "Connectivity — OPNsense vantage point",
-      "gridPos": {"h": 6, "w": 24, "x": 0, "y": 6},
-      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "type": "timeseries",
+      "title": "Round-trip time",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
       "targets": [
         {
-          "expr": "opnsense_gateways_status{name=~\"MONITOR_CLOUDFLARE|MONITOR_GOOGLE\"}",
-          "legendFormat": "{{name}}"
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "editorMode": "code",
+          "expr": "opnsense_gateways_rtt_milliseconds{name=~\"$gateway\"}",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
         }
       ],
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true, "calcs": []},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
       "fieldConfig": {
         "defaults": {
-          "mappings": [
-            {"type": "value", "options": {"0": {"text": "down", "color": "red"}}},
-            {"type": "value", "options": {"1": {"text": "up", "color": "green"}}}
-          ]
-        }
+          "unit": "ms",
+          "min": 0,
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
       }
     },
     {
       "id": 3,
       "type": "timeseries",
-      "title": "Latency (RTT, ms)",
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
-      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "title": "Jitter",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
       "targets": [
         {
-          "expr": "probe_duration_seconds{job=\"opnsense-connectivity-cluster\"} * 1000",
-          "legendFormat": "cluster / {{instance}}"
-        },
-        {
-          "expr": "opnsense_gateways_rtt_milliseconds{name=~\"MONITOR_CLOUDFLARE|MONITOR_GOOGLE\"}",
-          "legendFormat": "opnsense / {{name}}"
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "editorMode": "code",
+          "expr": "opnsense_gateways_rttd_milliseconds{name=~\"$gateway\"}",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
         }
-      ]
+      ],
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true, "calcs": []},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      }
     },
     {
       "id": 4,
       "type": "timeseries",
-      "title": "Jitter (RTTd, ms) — OPNsense vantage point",
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
-      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "title": "Packet loss",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
       "targets": [
         {
-          "expr": "opnsense_gateways_rttd_milliseconds{name=~\"MONITOR_CLOUDFLARE|MONITOR_GOOGLE\"}",
-          "legendFormat": "{{name}}"
+          "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+          "editorMode": "code",
+          "expr": "opnsense_gateways_loss_percentage{name=~\"$gateway\"}",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
         }
-      ]
+      ],
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom", "showLegend": true, "calcs": []},
+        "tooltip": {"mode": "multi", "sort": "desc"}
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "color": {"mode": "palette-classic"},
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      }
     }
   ]
 }

@@ -1,6 +1,6 @@
 apiVersion: v2
 name: opnsense-observability
-description: Kubernetes-native OPNsense monitoring — system health, firmware-update alerts, dual-vantage-point internet connectivity, NetFlow traffic analytics, and IDS alert triage.
+description: Kubernetes-native OPNsense monitoring — system health, firmware-update alerts, gateway connectivity, NetFlow traffic analytics, and IDS alert triage.
 type: application
 version: 0.1.0-alpha.1
 appVersion: "0.1.0"

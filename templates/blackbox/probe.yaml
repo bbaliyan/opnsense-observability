@@ -1,15 +1,15 @@
-{{- if .Values.blackboxExporter.enabled }}
+{{- if and .Values.blackboxExporter.enabled .Values.blackboxExporter.wanGatewayAddress }}
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:
-  name: {{ include "opnsense-observability.fullname" . }}-connectivity
+  name: {{ include "opnsense-observability.fullname" . }}-wan-gateway
   labels:
     {{- include "opnsense-observability.labels" . | nindent 4 }}
     {{- with .Values.blackboxExporter.probeSelectorLabels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  jobName: opnsense-connectivity-cluster
+  jobName: opnsense-wan-gateway
   interval: {{ .Values.blackboxExporter.scrapeInterval }}
   module: icmp
   prober:
@@ -18,11 +18,5 @@ spec:
   targets:
     staticConfig:
       static:
-        - "1.1.1.1"
-        - "8.8.8.8"
-        {{- if .Values.blackboxExporter.wanGatewayAddress }}
         - {{ .Values.blackboxExporter.wanGatewayAddress | quote }}
-        {{- end }}
-      labels:
-        vantage: cluster
 {{- end }}

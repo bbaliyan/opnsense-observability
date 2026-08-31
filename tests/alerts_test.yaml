@@ -2,7 +2,7 @@ suite: core alert rules
 templates:
   - alerts/prometheusrule.yaml
 tests:
-  - it: renders a PrometheusRule with all five core alerts
+  - it: renders a PrometheusRule with all four core alerts
     asserts:
       - isKind:
           of: PrometheusRule
@@ -19,14 +19,11 @@ tests:
           path: spec.groups[0].rules[3].alert
           value: OPNsenseHighLatency
       - equal:
-          path: spec.groups[0].rules[4].alert
-          value: ClusterInternetConnectivityLost
-      - equal:
           path: spec.groups[0].rules[1].labels.severity
           value: critical
-      - equal:
-          path: spec.groups[0].rules[4].labels.severity
-          value: critical
+      - lengthEqual:
+          path: spec.groups[0].rules
+          count: 4
   - it: omits the firmware alert when disabled
     set:
       alerts.firmwareUpdateAvailable.enabled: false
@@ -34,14 +31,9 @@ tests:
       - notEqual:
           path: spec.groups[0].rules[0].alert
           value: OPNsenseFirmwareUpdateAvailable
-  - it: omits the cluster connectivity alert when individually disabled
-    set:
-      alerts.clusterConnectivityLost.enabled: false
-      alerts.akvoradoPipelineLag.enabled: false
-    asserts:
       - lengthEqual:
           path: spec.groups[0].rules
-          count: 4
+          count: 3
   - it: renders nothing when alerts are disabled globally
     set:
       alerts.enabled: false
@@ -54,7 +46,7 @@ tests:
       alerts.akvoradoPipelineLag.enabled: true
     asserts:
       - equal:
-          path: spec.groups[0].rules[5].alert
+          path: spec.groups[0].rules[4].alert
           value: AkvoradoPipelineLag
   - it: omits AkvoradoPipelineLag when disabled
     set:
@@ -62,7 +54,7 @@ tests:
     asserts:
       - lengthEqual:
           path: spec.groups[0].rules
-          count: 5
+          count: 4
   - it: omits AkvoradoPipelineLag when akvorado is disabled even if the alert itself is enabled
     set:
       akvorado.enabled: false
@@ -70,4 +62,4 @@ tests:
     asserts:
       - lengthEqual:
           path: spec.groups[0].rules
-          count: 5
+          count: 4

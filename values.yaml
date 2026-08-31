@@ -21,21 +21,16 @@ opnsenseExporter:
     insecureSkipVerify: false
     apiKeySecretRef: {name: "", key: "api-key"}
     apiSecretSecretRef: {name: "", key: "api-secret"}
-  # Names of the monitor-only dpinger gateways (design spec §2a/§6) so
-  # dashboards can pair "vantage=opnsense" with "vantage=cluster" series
-  # for the same target.
-  connectivityGatewayNames:
-    cloudflare: "MONITOR_CLOUDFLARE"
-    google: "MONITOR_GOOGLE"
   resources:
     requests: {cpu: 10m, memory: 32Mi}
     limits: {memory: 64Mi}
 
-# -- blackbox-exporter: ICMP probes to 1.1.1.1/8.8.8.8/the WAN gateway,
-# from inside the cluster (cluster-side vantage point).
+# -- blackbox-exporter: ICMP probe of the OPNsense WAN gateway from inside the
+# cluster. Internet reachability is measured by the firewall's own gateway
+# monitoring and read through opnsense-exporter.
 blackboxExporter:
-  enabled: true
-  scrapeInterval: 10s            # 5-15s band; not a 5-minute default
+  enabled: false
+  scrapeInterval: 10s
   wanGatewayAddress: ""           # OPNsense WAN gateway IP, user-supplied
   probeSelectorLabels: {}         # must match the cluster Prometheus's probeSelector
 
@@ -70,7 +65,6 @@ alerts:
   gatewayDown: {enabled: true, severity: critical}
   highPacketLoss: {enabled: true, thresholdPercent: 5, severity: warning}
   highLatency: {enabled: true, thresholdMs: 150, severity: warning}
-  clusterConnectivityLost: {enabled: true, severity: critical}
   akvoradoPipelineLag: {enabled: true, severity: warning}
 
 serviceMonitor:
