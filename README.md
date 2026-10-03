@@ -78,6 +78,16 @@ the per-interface firewall panels to your NIC names (`igb*`, `ix*`, `em*`,
 The **OPNsense Connectivity** dashboard renders gateway status, RTT, jitter and
 loss from the firewall's own dpinger monitoring.
 
+The **OPNsense Node** dashboard (adapted from grafana.com dashboard 19366) is
+built on `os-node_exporter` and adds per-interface packets, multicast, drops
+and errors, plus syscalls, forks and traps. It carries the same two instance
+pickers, and its **WAN Interface** and **LAN Interface** pickers take
+OPNsense's interface names (default `WAN` and `LAN`). The dashboard resolves
+those names to NIC devices (`ix0`, `vtnet1`, and so on) through the exporter's
+`opnsense_interfaces_*` metrics, so it needs both scrape targets. Its
+Temperature panel stays empty on a virtualized firewall, because the guest
+can't read the CPU's temperature sensors.
+
 **EveBox is its own web UI, not a Grafana datasource.** It stores events in its
 own SQLite database and serves its own alert-triage interface on port 5636. No
 Grafana dashboard in this chart reads EveBox data, and there is no way to make

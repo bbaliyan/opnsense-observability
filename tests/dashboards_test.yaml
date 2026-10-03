@@ -2,6 +2,7 @@ suite: dashboard ConfigMaps
 templates:
   - dashboards/connectivity-dashboard.yaml
   - dashboards/opnsense-health-dashboard.yaml
+  - dashboards/opnsense-node-dashboard.yaml
 tests:
   - it: renders the connectivity dashboard ConfigMap with the sidecar label
     template: dashboards/connectivity-dashboard.yaml
@@ -89,6 +90,37 @@ tests:
       - matchRegex:
           path: data["opnsense-health.json"]
           pattern: 'interface=~\\"\$fw_interface\\"'
+  - it: renders the node dashboard ConfigMap with the sidecar label
+    template: dashboards/opnsense-node-dashboard.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.labels.grafana_dashboard
+          value: "1"
+      - exists:
+          path: data["opnsense-node.json"]
+  - it: resolves every node datasource through the DS_PROMETHEUS variable
+    template: dashboards/opnsense-node-dashboard.yaml
+    asserts:
+      - notMatchRegex:
+          path: data["opnsense-node.json"]
+          pattern: '"type": "prometheus",\s*"uid": "[^$]'
+      - notMatchRegex:
+          path: data["opnsense-node.json"]
+          pattern: __inputs|__requires
+  - it: resolves WAN and LAN devices from the exporter's interface names
+    template: dashboards/opnsense-node-dashboard.yaml
+    asserts:
+      - matchRegex:
+          path: data["opnsense-node.json"]
+          pattern: 'interface=\\"\$wan\\"\}, device\)'
+      - matchRegex:
+          path: data["opnsense-node.json"]
+          pattern: node_network_receive_bytes_total\{instance=\\"\$node_instance\\",device=\\"\$wan_device\\"\}
+      - notMatchRegex:
+          path: data["opnsense-node.json"]
+          pattern: '\$job|igc[0-9]'
   - it: renders nothing when dashboards are disabled
     set:
       dashboards.enabled: false
