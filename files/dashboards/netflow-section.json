@@ -189,10 +189,10 @@
           "editorType": "sql",
           "queryType": "table",
           "format": 1,
-          "rawSql": "SELECT DstAS AS asn, dictGetOrDefault('default.asns', 'name', DstAS, '') AS name, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY DstAS ORDER BY bytes DESC LIMIT 20"
+          "rawSql": "SELECT DstAS AS asn, if(DstAS = 0, 'Private or unknown (local traffic)', dictGetOrDefault('default.asns', 'name', DstAS, '')) AS name, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY DstAS ORDER BY bytes DESC LIMIT 20"
         }
       ],
-      "description": "Networks (autonomous systems) that received the most data in the selected time range."
+      "description": "Networks (autonomous systems) that received the most data in the selected time range. ASN 0 is traffic with no known network: mostly local and Tailscale addresses."
     }
   ]
 }
