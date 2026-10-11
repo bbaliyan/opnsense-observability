@@ -15,47 +15,455 @@
       }
     ]
   },
-  "description": "Host and per-interface packet counters from os-node_exporter on the firewall. Based on grafana.com dashboard 19366.",
+  "description": "Internet speed and gateway connectivity, plus host and per-interface counters from os-node_exporter on the firewall. System panels based on grafana.com dashboard 19366.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "links": [],
   "panels": [
     {
+      "id": 101,
+      "type": "row",
+      "title": "Internet",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "panels": []
+    },
+    {
+      "id": 102,
+      "type": "stat",
+      "title": "Download",
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__rate_interval]) * 8",
+          "legendFormat": "",
+          "refId": "A",
+          "range": true
+        }
+      ],
       "fieldConfig": {
         "defaults": {
+          "unit": "bps",
+          "mappings": [],
           "color": {
-            "mode": "continuous-GrYlRd"
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "timeFrom": "1h"
+    },
+    {
+      "id": 103,
+      "type": "stat",
+      "title": "Upload",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__rate_interval]) * 8",
+          "legendFormat": "",
+          "refId": "A",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "timeFrom": "1h"
+    },
+    {
+      "id": 104,
+      "type": "stat",
+      "title": "Peak download",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 12,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "max_over_time((rate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8)[$__range:1m])",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 105,
+      "type": "stat",
+      "title": "Peak upload",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 15,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "max_over_time((rate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8)[$__range:1m])",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 106,
+      "type": "stat",
+      "title": "Downloaded",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 18,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "increase(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__range])",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 107,
+      "type": "stat",
+      "title": "Uploaded",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 21,
+        "y": 1
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "increase(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__range])",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 108,
+      "type": "timeseries",
+      "title": "WAN speed",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__rate_interval]) * 8",
+          "legendFormat": "Download",
+          "refId": "A",
+          "range": true
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "rate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__rate_interval]) * 8",
+          "legendFormat": "Upload",
+          "refId": "B",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 20,
-            "gradientMode": "scheme",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 3,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
+            "lineWidth": 1,
+            "fillOpacity": 25,
+            "showPoints": "never",
             "spanNulls": false,
+            "lineInterpolation": "linear",
             "stacking": {
               "group": "A",
               "mode": "none"
@@ -70,38 +478,89 @@
             "steps": [
               {
                 "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
+                "value": null
               }
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Download"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Upload"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          }
+        ]
       },
-      "gridPos": {
-        "x": 0,
-        "y": 0,
-        "w": 5,
-        "h": 3
-      },
-      "id": 17,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "displayMode": "table",
           "placement": "bottom",
-          "showLegend": false
+          "showLegend": true,
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ]
         },
         "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
+          "mode": "multi",
+          "sort": "desc",
+          "hideZeros": false
         }
+      }
+    },
+    {
+      "id": 109,
+      "type": "row",
+      "title": "Connectivity",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
       },
-      "pluginVersion": "12.1.1",
+      "panels": []
+    },
+    {
+      "id": 110,
+      "type": "state-timeline",
+      "title": "Gateway status",
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
       "targets": [
         {
           "datasource": {
@@ -109,14 +568,584 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "node_cpu_temperature_celsius{instance=\"$node_instance\",cpu=\"0\"}",
-          "legendFormat": "{{cpu}}",
+          "expr": "opnsense_gateways_status{opnsense_instance=\"$opnsense_instance\",name=~\"$gateway\"}",
+          "legendFormat": "{{name}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Temperature",
-      "type": "timeseries"
+      "options": {
+        "mergeValues": true,
+        "showValue": "auto",
+        "alignValue": "center",
+        "rowHeight": 0.9,
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 2,
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "fillOpacity": 70,
+            "lineWidth": 0,
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              },
+              {
+                "color": "yellow",
+                "value": 2
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Offline",
+                  "color": "red",
+                  "index": 0
+                },
+                "1": {
+                  "text": "Online",
+                  "color": "green",
+                  "index": 1
+                },
+                "2": {
+                  "text": "Unknown",
+                  "color": "yellow",
+                  "index": 2
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 111,
+      "type": "timeseries",
+      "title": "Round-trip time",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "opnsense_gateways_rtt_milliseconds{opnsense_instance=\"$opnsense_instance\",name=~\"$gateway\"}",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 112,
+      "type": "timeseries",
+      "title": "Jitter",
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "opnsense_gateways_rttd_milliseconds{opnsense_instance=\"$opnsense_instance\",name=~\"$gateway\"}",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": []
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 113,
+      "type": "timeseries",
+      "title": "Packet loss",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 18,
+        "x": 0,
+        "y": 27
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "max_over_time(opnsense_gateways_loss_percentage{opnsense_instance=\"$opnsense_instance\",name=~\"$gateway\"}[$__rate_interval])",
+          "legendFormat": "{{name}}",
+          "refId": "A",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "showPoints": "never",
+            "spanNulls": false,
+            "lineInterpolation": "linear",
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "dashed"
+            },
+            "barAlignment": 0,
+            "axisSoftMax": 2
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true,
+          "calcs": [
+            "max",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc",
+          "hideZeros": false
+        }
+      }
+    },
+    {
+      "id": 114,
+      "type": "stat",
+      "title": "Worst loss in range",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 27
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "max(max_over_time(opnsense_gateways_loss_percentage{opnsense_instance=\"$opnsense_instance\",name=~\"$gateway\"}[$__range]))",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "decimals": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 115,
+      "type": "stat",
+      "title": "Average loss in range",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 30
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "avg(avg_over_time(opnsense_gateways_loss_percentage{opnsense_instance=\"$opnsense_instance\",name=~\"$gateway\"}[$__range]))",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 116,
+      "type": "stat",
+      "title": "Minutes with any loss",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 33
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "max(count_over_time((opnsense_gateways_loss_percentage{opnsense_instance=\"$opnsense_instance\",name=~\"$gateway\"} > 0)[$__range:1m])) or vector(0)",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 117,
+      "type": "row",
+      "title": "System",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
+      "panels": []
+    },
+    {
+      "id": 17,
+      "type": "stat",
+      "title": "T640 CPU temperature",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 37,
+        "w": 5,
+        "h": 3
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "idrac_sensors_temperature{name=~\"CPU[0-9]+ Temp\"}",
+          "legendFormat": "{{name}}",
+          "refId": "A",
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
     },
     {
       "datasource": {
@@ -159,7 +1188,7 @@
       },
       "gridPos": {
         "x": 5,
-        "y": 0,
+        "y": 37,
         "w": 5,
         "h": 3
       },
@@ -243,7 +1272,7 @@
       },
       "gridPos": {
         "x": 10,
-        "y": 0,
+        "y": 37,
         "w": 5,
         "h": 3
       },
@@ -328,7 +1357,7 @@
       },
       "gridPos": {
         "x": 15,
-        "y": 0,
+        "y": 37,
         "w": 5,
         "h": 3
       },
@@ -413,7 +1442,7 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 0,
+        "y": 37,
         "w": 4,
         "h": 3
       },
@@ -567,7 +1596,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 3,
+        "y": 40,
         "w": 6,
         "h": 4
       },
@@ -664,7 +1693,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 3,
+        "y": 40,
         "w": 6,
         "h": 4
       },
@@ -824,7 +1853,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 3,
+        "y": 40,
         "w": 6,
         "h": 4
       },
@@ -926,7 +1955,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 3,
+        "y": 40,
         "w": 6,
         "h": 4
       },
@@ -1018,130 +2047,14 @@
               }
             ]
           },
-          "unit": "binBps"
+          "unit": "bps"
         },
         "overrides": []
       },
       "gridPos": {
         "x": 0,
-        "y": 7,
-        "w": 12,
-        "h": 5
-      },
-      "id": 8,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "irate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[1m])",
-          "intervalFactor": 1,
-          "legendFormat": "In: {{ device }}",
-          "metric": "node_network_receive_bytes_total",
-          "range": true,
-          "refId": "A",
-          "step": 1
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "-irate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[1m])",
-          "hide": false,
-          "intervalFactor": 1,
-          "legendFormat": "Out: {{ device }}",
-          "metric": "node_network_receive_bytes_total",
-          "range": true,
-          "refId": "B",
-          "step": 1
-        }
-      ],
-      "title": "WAN In/Out",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 25,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "binBps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "x": 12,
-        "y": 7,
-        "w": 12,
+        "y": 44,
+        "w": 24,
         "h": 5
       },
       "id": 31,
@@ -1166,7 +2079,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "irate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$lan_device\"}[1m])",
+          "expr": "irate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$lan_device\"}[1m]) * 8",
           "intervalFactor": 1,
           "legendFormat": "In: {{ device }}",
           "metric": "node_network_receive_bytes_total",
@@ -1180,7 +2093,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "-irate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$lan_device\"}[1m])",
+          "expr": "-irate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$lan_device\"}[1m]) * 8",
           "hide": false,
           "intervalFactor": 1,
           "legendFormat": "Out: {{ device }}",
@@ -1190,7 +2103,7 @@
           "step": 1
         }
       ],
-      "title": "LAN In/Out",
+      "title": "LAN In/Out (Mbps)",
       "type": "timeseries"
     },
     {
@@ -1255,7 +2168,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 12,
+        "y": 49,
         "w": 12,
         "h": 6
       },
@@ -1400,7 +2313,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 12,
+        "y": 49,
         "w": 12,
         "h": 6
       },
@@ -1545,7 +2458,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 18,
+        "y": 55,
         "w": 12,
         "h": 6
       },
@@ -1690,7 +2603,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 18,
+        "y": 55,
         "w": 12,
         "h": 6
       },
@@ -1868,7 +2781,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 24,
+        "y": 61,
         "w": 12,
         "h": 6
       },
@@ -2079,7 +2992,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 24,
+        "y": 61,
         "w": 12,
         "h": 6
       },
@@ -2200,7 +3113,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 30,
+        "y": 67,
         "w": 24,
         "h": 6
       },
@@ -2307,6 +3220,28 @@
         "type": "query"
       },
       {
+        "name": "gateway",
+        "label": "Gateway",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(opnsense_gateways_status{opnsense_instance=\"$opnsense_instance\"}, name)",
+        "query": {
+          "qryType": 1,
+          "query": "label_values(opnsense_gateways_status{opnsense_instance=\"$opnsense_instance\"}, name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {},
+        "options": []
+      },
+      {
         "current": {
           "text": "WAN",
           "value": "WAN"
@@ -2407,7 +3342,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
