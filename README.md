@@ -240,7 +240,7 @@ Only relevant with `akvorado.enabled: true`.
    (`akvorado.netflow.timestampSource`), but a flow lasting 30 minutes still
    lands in its first minute unless the timeout is short. Leave **Inactive
    Timeout** at `15`.
-4. For device names, give the API user the dnsmasq **Leases** privilege (see
+4. For device names, give the API user the **Services: Dnsmasq DNS/DHCP: Settings** privilege (see
    *Device names* below).
 
 ### 6. Suricata EVE syslog output
@@ -340,9 +340,10 @@ single-node ClickHouse.
 - **Device names.** The per-device panels show a device's DHCP hostname. A
   CronJob (`akvorado.deviceNames.enabled: true`) reads the leases from OPNsense's dnsmasq API
   every 5 minutes into the ClickHouse table `default.device_names`, using the
-  same API credentials as the exporter. That API user needs the dnsmasq
-  **Leases** privilege (System → Access → Users → the user → Effective
-  Privileges). Devices without a hostname show their IP. Names are looked up when
+  same API credentials as the exporter. That API user needs the
+  **Services: Dnsmasq DNS/DHCP: Settings** privilege (System → Access → Users →
+  the user → Effective Privileges). OPNsense has no read-only variant: it covers
+  the whole dnsmasq API, so consider a dedicated API user for it. Devices without a hostname show their IP. Names are looked up when
   the dashboard loads, so old traffic gets the latest name for its IP. Traffic of
   everything behind the VPN pod is credited to the node running it.
 - By default Akvorado asks the exporter for interface names over SNMP. A firewall
@@ -413,7 +414,7 @@ Start from one of the shipped examples:
 | `akvorado.netflow.listenPort` | UDP port the inlet listens on for NetFlow records. |
 | `akvorado.netflow.serviceType` | Service type for the inlet's NetFlow listener; `LoadBalancer` so OPNsense on the LAN can reach it. |
 | `akvorado.netflow.timestampSource` | Which time stamps a flow: `netflow-first-switched` (default, when it began), `netflow-packet` or `udp` (when the export arrived). |
-| `akvorado.deviceNames.enabled` | Sync DHCP leases from OPNsense into ClickHouse so the device panels show names. Default `false`; needs OPNsense dnsmasq DHCP and the Leases privilege on the API user. |
+| `akvorado.deviceNames.enabled` | Sync DHCP leases from OPNsense into ClickHouse so the device panels show names. Default `false`; needs OPNsense dnsmasq DHCP and the *Services: Dnsmasq DNS/DHCP: Settings* privilege on the API user. |
 | `akvorado.deviceNames.schedule` | Cron schedule of the lease sync. Default every 5 minutes. |
 | `akvorado.kafka.brokers` | External Kafka broker list; empty (default) uses the bundled Redpanda's internal listener. |
 | `akvorado.clickhouse.persistence.size` | PVC size for the vendored single-node ClickHouse StatefulSet. |
