@@ -1,39 +1,40 @@
 {
-  "title": "OPNsense Traffic (NetFlow)",
-  "uid": "opnsense-traffic",
-  "tags": [
-    "opnsense",
-    "netflow"
-  ],
-  "timezone": "browser",
-  "style": "dark",
-  "schemaVersion": 39,
-  "templating": {
-    "list": [
-      {
-        "name": "DS_CLICKHOUSE",
-        "type": "datasource",
-        "query": "grafana-clickhouse-datasource",
-        "label": "ClickHouse (Akvorado)",
-        "refresh": 1,
-        "hide": 0,
-        "current": {},
-        "options": [],
-        "includeAll": false,
-        "multi": false
-      }
-    ]
+  "height": 18,
+  "variable": {
+    "name": "DS_CLICKHOUSE",
+    "type": "datasource",
+    "query": "grafana-clickhouse-datasource",
+    "label": "ClickHouse (Akvorado)",
+    "refresh": 1,
+    "hide": 0,
+    "current": {},
+    "options": [],
+    "includeAll": false,
+    "multi": false
   },
   "panels": [
     {
-      "id": 1,
-      "type": "geomap",
-      "title": "Traffic by destination country",
+      "id": 200,
+      "type": "row",
+      "title": "Traffic (NetFlow)",
+      "collapsed": false,
       "gridPos": {
-        "h": 10,
+        "h": 1,
         "w": 24,
         "x": 0,
         "y": 0
+      },
+      "panels": []
+    },
+    {
+      "id": 201,
+      "type": "geomap",
+      "title": "Traffic by destination country",
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 12,
+        "h": 9
       },
       "datasource": {
         "type": "grafana-clickhouse-datasource",
@@ -98,73 +99,18 @@
             }
           }
         ]
-      }
+      },
+      "description": "Where your internet traffic goes, by destination country, from NetFlow."
     },
     {
-      "id": 2,
-      "type": "table",
-      "title": "Top talkers (source IP)",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 10
-      },
-      "datasource": {
-        "type": "grafana-clickhouse-datasource",
-        "uid": "${DS_CLICKHOUSE}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_CLICKHOUSE}"
-          },
-          "editorType": "sql",
-          "queryType": "table",
-          "format": 1,
-          "rawSql": "SELECT replaceRegexpOne(IPv6NumToString(SrcAddr), '^::ffff:', '') AS source_ip, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY SrcAddr ORDER BY bytes DESC LIMIT 20"
-        }
-      ]
-    },
-    {
-      "id": 3,
-      "type": "table",
-      "title": "Top destination ASNs",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 10
-      },
-      "datasource": {
-        "type": "grafana-clickhouse-datasource",
-        "uid": "${DS_CLICKHOUSE}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_CLICKHOUSE}"
-          },
-          "editorType": "sql",
-          "queryType": "table",
-          "format": 1,
-          "rawSql": "SELECT DstAS AS asn, dictGetOrDefault('default.asns', 'name', DstAS, '') AS name, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY DstAS ORDER BY bytes DESC LIMIT 20"
-        }
-      ]
-    },
-    {
-      "id": 4,
+      "id": 202,
       "type": "timeseries",
       "title": "Traffic by protocol",
       "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 18
+        "x": 12,
+        "y": 1,
+        "w": 12,
+        "h": 9
       },
       "datasource": {
         "type": "grafana-clickhouse-datasource",
@@ -187,8 +133,66 @@
           "format": 0,
           "rawSql": "SELECT toStartOfInterval(TimeReceived, INTERVAL 1 minute) AS time, dictGetOrDefault('default.protocols', 'name', toUInt8(Proto), toString(Proto)) AS metric, sum(Bytes * SamplingRate) / 60 AS bytes_per_sec FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY time, metric ORDER BY time"
         }
-      ]
+      ],
+      "description": "Internet traffic by protocol over the selected time range, from NetFlow."
+    },
+    {
+      "id": 203,
+      "type": "table",
+      "title": "Top hosts (source IP)",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "queryType": "table",
+          "format": 1,
+          "rawSql": "SELECT replaceRegexpOne(IPv6NumToString(SrcAddr), '^::ffff:', '') AS source_ip, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY SrcAddr ORDER BY bytes DESC LIMIT 20"
+        }
+      ],
+      "description": "Hosts, local or remote, that sent the most data in the selected time range. Downloads show up under the remote servers (CDNs and so on) that sent them."
+    },
+    {
+      "id": 204,
+      "type": "table",
+      "title": "Top destination ASNs",
+      "gridPos": {
+        "x": 12,
+        "y": 10,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "queryType": "table",
+          "format": 1,
+          "rawSql": "SELECT DstAS AS asn, dictGetOrDefault('default.asns', 'name', DstAS, '') AS name, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY DstAS ORDER BY bytes DESC LIMIT 20"
+        }
+      ],
+      "description": "Networks (autonomous systems) that received the most data in the selected time range."
     }
-  ],
-  "version": 2
+  ]
 }

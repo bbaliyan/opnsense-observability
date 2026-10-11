@@ -37,14 +37,14 @@
     {
       "id": 102,
       "type": "stat",
-      "title": "Download",
+      "title": "Download speed",
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
-        "h": 5,
-        "w": 6,
+        "h": 4,
+        "w": 5,
         "x": 0,
         "y": 1
       },
@@ -55,10 +55,11 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__rate_interval]) * 8",
+          "expr": "rate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8",
           "legendFormat": "",
           "refId": "A",
-          "range": true
+          "instant": true,
+          "range": false
         }
       ],
       "fieldConfig": {
@@ -82,7 +83,7 @@
       },
       "options": {
         "colorMode": "value",
-        "graphMode": "area",
+        "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
         "textMode": "auto",
@@ -95,21 +96,21 @@
           "values": false
         }
       },
-      "timeFrom": "1h"
+      "description": "Internet download speed right now (average of the last two minutes), from the firewall's WAN port."
     },
     {
       "id": 103,
       "type": "stat",
-      "title": "Upload",
+      "title": "Upload speed",
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 6,
-        "y": 1
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 5
       },
       "targets": [
         {
@@ -118,133 +119,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__rate_interval]) * 8",
-          "legendFormat": "",
-          "refId": "A",
-          "range": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bps",
-          "mappings": [],
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "orange",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "textMode": "auto",
-        "wideLayout": true,
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      },
-      "timeFrom": "1h"
-    },
-    {
-      "id": 104,
-      "type": "stat",
-      "title": "Peak download",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 3,
-        "x": 12,
-        "y": 1
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "max_over_time((rate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8)[$__range:1m])",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true,
-          "range": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bps",
-          "mappings": [],
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "textMode": "auto",
-        "wideLayout": true,
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      }
-    },
-    {
-      "id": 105,
-      "type": "stat",
-      "title": "Peak upload",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 3,
-        "x": 15,
-        "y": 1
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "max_over_time((rate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8)[$__range:1m])",
+          "expr": "rate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8",
           "legendFormat": "",
           "refId": "A",
           "instant": true,
@@ -284,147 +159,22 @@
           "fields": "",
           "values": false
         }
-      }
-    },
-    {
-      "id": 106,
-      "type": "stat",
-      "title": "Downloaded",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
       },
-      "gridPos": {
-        "h": 5,
-        "w": 3,
-        "x": 18,
-        "y": 1
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "increase(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__range])",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true,
-          "range": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "decbytes",
-          "mappings": [],
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "textMode": "auto",
-        "wideLayout": true,
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      }
-    },
-    {
-      "id": 107,
-      "type": "stat",
-      "title": "Uploaded",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 3,
-        "x": 21,
-        "y": 1
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "increase(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__range])",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true,
-          "range": false
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "decbytes",
-          "mappings": [],
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "orange",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "textMode": "auto",
-        "wideLayout": true,
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        }
-      }
+      "description": "Internet upload speed right now (average of the last two minutes), from the firewall's WAN port."
     },
     {
       "id": 108,
       "type": "timeseries",
-      "title": "WAN speed",
+      "title": "Internet speed history",
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
       "gridPos": {
         "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 6
+        "w": 19,
+        "x": 5,
+        "y": 1
       },
       "targets": [
         {
@@ -532,7 +282,264 @@
           "sort": "desc",
           "hideZeros": false
         }
-      }
+      },
+      "description": "Download and upload speed over the selected time range, measured on the firewall's WAN port. Traffic of every device in the house is included."
+    },
+    {
+      "id": 104,
+      "type": "stat",
+      "title": "Peak download",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "max_over_time((rate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8)[$__range:1m])",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Highest download speed in the selected time range."
+    },
+    {
+      "id": 105,
+      "type": "stat",
+      "title": "Peak upload",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 6,
+        "y": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "max_over_time((rate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8)[$__range:1m])",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Highest upload speed in the selected time range."
+    },
+    {
+      "id": 106,
+      "type": "stat",
+      "title": "Downloaded",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 12,
+        "y": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "increase(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__range])",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Total data downloaded in the selected time range."
+    },
+    {
+      "id": 107,
+      "type": "stat",
+      "title": "Uploaded",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 18,
+        "y": 9
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "increase(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[$__range])",
+          "legendFormat": "",
+          "refId": "A",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decbytes",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      },
+      "description": "Total data uploaded in the selected time range."
     },
     {
       "id": 109,
@@ -543,7 +550,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 12
       },
       "panels": []
     },
@@ -555,7 +562,7 @@
         "h": 5,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 13
       },
       "datasource": {
         "type": "prometheus",
@@ -652,7 +659,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 20
+        "y": 18
       },
       "datasource": {
         "type": "prometheus",
@@ -709,7 +716,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 20
+        "y": 18
       },
       "datasource": {
         "type": "prometheus",
@@ -770,7 +777,7 @@
         "h": 9,
         "w": 18,
         "x": 0,
-        "y": 27
+        "y": 25
       },
       "targets": [
         {
@@ -860,7 +867,7 @@
         "h": 3,
         "w": 6,
         "x": 18,
-        "y": 27
+        "y": 25
       },
       "targets": [
         {
@@ -932,7 +939,7 @@
         "h": 3,
         "w": 6,
         "x": 18,
-        "y": 30
+        "y": 28
       },
       "targets": [
         {
@@ -1004,7 +1011,7 @@
         "h": 3,
         "w": 6,
         "x": 18,
-        "y": 33
+        "y": 31
       },
       "targets": [
         {
@@ -1073,7 +1080,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 34
       },
       "panels": []
     },
@@ -1132,7 +1139,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 37,
+        "y": 35,
         "w": 24,
         "h": 9
       },
@@ -1368,13 +1375,13 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 46,
+        "y": 44,
         "w": 8,
         "h": 9
       },
       "id": 65,
       "options": {
-        "displayMode": "basic",
+        "displayMode": "gradient",
         "legend": {
           "calcs": [],
           "displayMode": "list",
@@ -1385,7 +1392,7 @@
         "minVizHeight": 0,
         "minVizWidth": 0,
         "namePlacement": "auto",
-        "orientation": "auto",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -1405,14 +1412,16 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "opnsense_protocol_tcp_connection_count_by_state{opnsense_instance=\"$opnsense_instance\"}",
+          "expr": "opnsense_protocol_tcp_connection_count_by_state{opnsense_instance=\"$opnsense_instance\"} > 0",
           "legendFormat": "{{state}}",
-          "range": true,
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "title": "TCP Connection States",
-      "type": "bargauge"
+      "type": "bargauge",
+      "description": "TCP connections on the firewall itself (its web interface, DNS, VPN and monitoring), by state, not the traffic it forwards for your devices. LISTEN is the services waiting for connections. A growing SYN_SENT means the firewall's own connections are failing, which points at an upstream problem. States with no connections are hidden."
     },
     {
       "datasource": {
@@ -1477,14 +1486,14 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Pass"
+              "options": "Inbound"
             },
             "properties": [
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
+                  "mode": "fixed",
+                  "fixedColor": "green"
                 }
               }
             ]
@@ -1492,14 +1501,14 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Block"
+              "options": "Outbound"
             },
             "properties": [
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
+                  "mode": "fixed",
+                  "fixedColor": "blue"
                 }
               }
             ]
@@ -1508,7 +1517,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 46,
+        "y": 44,
         "w": 8,
         "h": 9
       },
@@ -1538,10 +1547,10 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\"}[1m]))",
-          "legendFormat": "Pass",
-          "range": true,
-          "refId": "A"
+          "expr": "sum(rate(opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\"}[2m]))",
+          "legendFormat": "Inbound",
+          "refId": "A",
+          "range": true
         },
         {
           "datasource": {
@@ -1549,15 +1558,15 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\"}[1m]))",
-          "hide": false,
-          "legendFormat": "Block",
-          "range": true,
-          "refId": "B"
+          "expr": "sum(rate(opnsense_firewall_out_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\"}[2m]))",
+          "legendFormat": "Outbound",
+          "refId": "B",
+          "range": true
         }
       ],
-      "title": "Firewall IPv4 Incoming Traffic",
-      "type": "timeseries"
+      "title": "Packets passed per second",
+      "type": "timeseries",
+      "description": "IPv4 packets per second the firewall lets through, across all interfaces. Shows how busy the firewall is."
     },
     {
       "datasource": {
@@ -1578,7 +1587,7 @@
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
-            "fillOpacity": 25,
+            "fillOpacity": 40,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -1622,14 +1631,14 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Pass"
+              "options": "Inbound"
             },
             "properties": [
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
+                  "mode": "fixed",
+                  "fixedColor": "red"
                 }
               }
             ]
@@ -1637,14 +1646,14 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Block"
+              "options": "Outbound"
             },
             "properties": [
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
+                  "mode": "fixed",
+                  "fixedColor": "orange"
                 }
               }
             ]
@@ -1653,7 +1662,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 46,
+        "y": 44,
         "w": 8,
         "h": 9
       },
@@ -1683,10 +1692,10 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(opnsense_firewall_out_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\"}[1m]))",
-          "legendFormat": "Pass",
-          "range": true,
-          "refId": "A"
+          "expr": "sum(rate(opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\"}[2m]))",
+          "legendFormat": "Inbound",
+          "refId": "A",
+          "range": true
         },
         {
           "datasource": {
@@ -1694,15 +1703,15 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(opnsense_firewall_out_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\"}[1m]))",
-          "hide": false,
-          "legendFormat": "Block",
-          "range": true,
-          "refId": "B"
+          "expr": "sum(rate(opnsense_firewall_out_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\"}[2m]))",
+          "legendFormat": "Outbound",
+          "refId": "B",
+          "range": true
         }
       ],
-      "title": "Firewall IPv4 Outgoing Traffic",
-      "type": "timeseries"
+      "title": "Packets blocked per second",
+      "type": "timeseries",
+      "description": "IPv4 packets per second the firewall blocks, across all interfaces. Mostly background noise and scans from the internet. A sudden rise can mean a rule is stopping your own devices: the table below shows which interface it is. Shown on its own scale because it is tiny next to passed traffic."
     },
     {
       "datasource": {
@@ -1822,7 +1831,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 55,
+        "y": 53,
         "w": 24,
         "h": 8
       },
@@ -1854,7 +1863,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by (interface) (opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}) / ((sum by (interface) (opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}) + sum by (interface) (opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"})) > 0) * 100",
+          "expr": "sum by (interface) (increase(opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}[$__range])) / ((sum by (interface) (increase(opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}[$__range])) + sum by (interface) (increase(opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}[$__range]))) > 0) * 100",
           "format": "table",
           "instant": true,
           "legendFormat": "Passed %",
@@ -1868,7 +1877,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by (interface) (opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}) / ((sum by (interface) (opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}) + sum by (interface) (opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"})) > 0) * 100",
+          "expr": "sum by (interface) (increase(opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}[$__range])) / ((sum by (interface) (increase(opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}[$__range])) + sum by (interface) (increase(opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}[$__range]))) > 0) * 100",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1883,7 +1892,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by (interface) (opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"})",
+          "expr": "sum by (interface) (increase(opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}[$__range]))",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1898,7 +1907,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum by (interface) (opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"})",
+          "expr": "sum by (interface) (increase(opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\",interface=~\"$fw_interface\"}[$__range]))",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1907,7 +1916,7 @@
           "refId": "D"
         }
       ],
-      "title": "Firewall Statistics by Interface",
+      "title": "Packets passed and blocked by interface",
       "transformations": [
         {
           "id": "merge",
@@ -1940,7 +1949,8 @@
           }
         }
       ],
-      "type": "table"
+      "type": "table",
+      "description": "Inbound IPv4 packets per interface in the selected time range, and the share the firewall passed or blocked. The internet-facing interface normally blocks the most (background noise). Blocks on a LAN interface mean a rule is stopping your devices."
     },
     {
       "id": 117,
@@ -1951,7 +1961,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 63
+        "y": 61
       },
       "panels": []
     },
@@ -1965,7 +1975,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 64,
+        "y": 62,
         "w": 5,
         "h": 3
       },
@@ -1976,8 +1986,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "idrac_sensors_temperature{name=~\"CPU[0-9]+ Temp\"}",
-          "legendFormat": "{{name}}",
+          "expr": "max(idrac_sensors_temperature{name=~\"CPU[0-9]+ Temp\"})",
+          "legendFormat": "",
           "refId": "A",
           "range": true
         }
@@ -2013,8 +2023,8 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "orientation": "horizontal",
-        "textMode": "auto",
+        "orientation": "auto",
+        "textMode": "value",
         "wideLayout": true,
         "reduceOptions": {
           "calcs": [
@@ -2023,7 +2033,8 @@
           "fields": "",
           "values": false
         }
-      }
+      },
+      "description": "Temperature of the hotter of the physical server's (Dell T640) two CPUs, from its iDRAC."
     },
     {
       "datasource": {
@@ -2066,7 +2077,7 @@
       },
       "gridPos": {
         "x": 5,
-        "y": 64,
+        "y": 62,
         "w": 5,
         "h": 3
       },
@@ -2150,7 +2161,7 @@
       },
       "gridPos": {
         "x": 10,
-        "y": 64,
+        "y": 62,
         "w": 5,
         "h": 3
       },
@@ -2235,7 +2246,7 @@
       },
       "gridPos": {
         "x": 15,
-        "y": 64,
+        "y": 62,
         "w": 5,
         "h": 3
       },
@@ -2320,7 +2331,7 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 64,
+        "y": 62,
         "w": 4,
         "h": 3
       },
@@ -2474,7 +2485,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 67,
+        "y": 65,
         "w": 6,
         "h": 4
       },
@@ -2571,7 +2582,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 67,
+        "y": 65,
         "w": 6,
         "h": 4
       },
@@ -2731,7 +2742,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 67,
+        "y": 65,
         "w": 6,
         "h": 4
       },
@@ -2833,7 +2844,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 67,
+        "y": 65,
         "w": 6,
         "h": 4
       },
@@ -2931,7 +2942,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 71,
+        "y": 69,
         "w": 24,
         "h": 5
       },
@@ -3046,7 +3057,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 76,
+        "y": 74,
         "w": 12,
         "h": 6
       },
@@ -3191,7 +3202,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 76,
+        "y": 74,
         "w": 12,
         "h": 6
       },
@@ -3336,7 +3347,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 82,
+        "y": 80,
         "w": 12,
         "h": 6
       },
@@ -3481,7 +3492,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 82,
+        "y": 80,
         "w": 12,
         "h": 6
       },
@@ -3659,7 +3670,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 88,
+        "y": 86,
         "w": 12,
         "h": 6
       },
@@ -3870,7 +3881,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 88,
+        "y": 86,
         "w": 12,
         "h": 6
       },
@@ -3991,7 +4002,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 94,
+        "y": 92,
         "w": 24,
         "h": 6
       },
