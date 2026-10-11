@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "opnsense-observability.fullname" . }}-dashboard-opnsense-health
+  name: {{ include "opnsense-observability.fullname" . }}-dashboard-internet-firewall
   labels:
     {{- include "opnsense-observability.labels" . | nindent 4 }}
     grafana_dashboard: "1"
   annotations:
     grafana_folder: {{ .Values.dashboards.folder }}
 data:
-  opnsense-health.json: |
-{{ .Files.Get "files/dashboards/opnsense-health.json" | indent 4 }}
+  internet-firewall.json: |
+{{ .Files.Get "files/dashboards/internet-firewall.json" | indent 4 }}
 {{- end }}

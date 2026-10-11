@@ -51,48 +51,40 @@ single most common setup mistake.
 | NetFlow records | Firewall pushes | UDP 2055 | Reporting → Netflow target | `<release>-akvorado-inlet` Service (`LoadBalancer` by default) |
 | Suricata EVE JSON | Firewall pushes | TCP syslog, RFC5424 | Logging target scoped to `suricata` | `<release>-evebox-syslog` Service (`ClusterIP` by default — publish it) |
 
-What Grafana reads: **Prometheus** for the health and connectivity dashboards,
+What Grafana reads: **Prometheus** for the Internet & Firewall dashboard,
 **ClickHouse** for the traffic dashboard.
 
-### Dashboard variables
+### The Internet & Firewall dashboard
 
-The **OPNsense Health** dashboard carries two instance pickers, because it
-draws on two independent scrape targets:
+It opens with the internet connection: current download and upload speed (the
+last hour as a sparkline), the peak and the total transferred in the chosen
+range, and a speed chart. Then come the gateways from the firewall's own
+dpinger monitoring (status, RTT, jitter and loss), the firewall (service
+status, TCP connections by state, passed and blocked IPv4 packets, per-interface
+rule statistics), and a system section adapted from grafana.com dashboard 19366
+(CPU, memory, swap, load, interrupts, per-interface packets, multicast, drops
+and errors). Loss is drawn as bars on a 0-2 % axis that grows only when loss is
+higher, with the worst loss, average loss and minutes with any loss for the
+chosen range beside it, so a 1 % blip is easy to see.
+
+It has these pickers, because it draws on two independent scrape targets:
 
 - **OPNsense Instance** selects the `opnsense_instance` label the exporter
-  stamps on its own metrics — the value of
-  `opnsenseExporter.opnsense.instanceLabel`. It drives the interface, gateway,
-  ARP, service, TCP-state and firewall panels.
+  stamps on its own metrics: the value of
+  `opnsenseExporter.opnsense.instanceLabel`. It drives the gateway, service,
+  TCP-state, firewall and interface panels.
 - **Firewall node_exporter Target** selects the `instance` label of the
   `os-node_exporter` scrape target on the firewall (e.g. `192.168.1.1:9100`).
-  It drives the uptime, temperature, CPU, load, memory, swap, interrupt,
-  filesystem and disk panels.
+  It drives the uptime, CPU, load, memory, swap, interrupt and WAN/LAN speed
+  panels.
+- **Gateway** and **Firewall Interface** scope the connectivity panels and the
+  per-interface firewall panels. Both default to all values.
+- **WAN Interface** and **LAN Interface** take OPNsense's interface names
+  (default `WAN` and `LAN`). The dashboard resolves them to NIC devices (`ix0`,
+  `vtnet1`, and so on) through the exporter's `opnsense_interfaces_*` metrics.
 
-They are different label spaces and will almost never hold the same string, so
-set both. Two further pickers keep the hardware-specific panels usable on any
-box: **Filesystem Device** scopes the filesystem panel (ZFS datasets, UFS
-mountpoints, whatever the firewall reports) and **Firewall Interface** scopes
-the per-interface firewall panels to your NIC names (`igb*`, `ix*`, `em*`,
-`re*`). Both default to all values.
-
-The **OPNsense Connectivity** dashboard renders gateway status, RTT, jitter and
-loss from the firewall's own dpinger monitoring. Loss is drawn as bars on a
-0-2 % axis that grows only when loss is higher, with the worst loss, average
-loss and minutes with any loss for the chosen range beside it, so a 1 % blip is
-easy to see.
-
-The **OPNsense Node** dashboard opens with the internet connection: current
-download and upload speed (the last hour as a sparkline), the peak and the
-total transferred in the chosen range, and a speed chart. Below that are the
-same gateway status, RTT, jitter and loss panels as the Connectivity dashboard,
-filtered by its **Gateway** picker. The last section is adapted from
-grafana.com dashboard 19366 and built on `os-node_exporter`. It adds
-per-interface packets, multicast, drops and errors, plus syscalls, forks and
-traps. The dashboard carries the same two instance pickers, and its **WAN
-Interface** and **LAN Interface** pickers take OPNsense's interface names
-(default `WAN` and `LAN`). It resolves those names to NIC devices (`ix0`,
-`vtnet1`, and so on) through the exporter's `opnsense_interfaces_*` metrics,
-so it needs both scrape targets. A virtualized firewall can't read the CPU's
+The two instance labels are different label spaces and will almost never hold
+the same string, so set both. A virtualized firewall can't read the CPU's
 temperature sensors, so the temperature panel shows the physical server's CPU
 temperature from an iDRAC exporter (`idrac_sensors_temperature`); without that
 metric it stays empty. The per-second panels need a scrape interval of 30 s or
@@ -163,11 +155,11 @@ valid but the group is missing a privilege.
 
 ### 2. os-node_exporter plugin
 
-**This step is not optional in practice.** Twelve panels on the OPNsense Health
+**This step is not optional in practice.** Many panels on the Internet & Firewall
 dashboard — uptime, temperature, CPU usage and utilization, load average,
 memory, swap, interrupts, context switches, filesystem, disk I/O and disk IOPS
 — read `node_*` metrics. Without this plugin and its scrape target, much of the
-health dashboard shows "No data".
+dashboard shows "No data".
 
 1. **Firmware → Plugins** → search `os-node_exporter` → install.
 2. **Services → Prometheus Exporter**: check *Enabled*, set *Listen Address* to
