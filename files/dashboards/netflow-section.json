@@ -44,7 +44,8 @@
         "defaults": {
           "color": {
             "mode": "continuous-blues"
-          }
+          },
+          "unit": "decbytes"
         }
       },
       "targets": [
@@ -163,7 +164,24 @@
           "rawSql": "SELECT replaceRegexpOne(IPv6NumToString(SrcAddr), '^::ffff:', '') AS source_ip, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY SrcAddr ORDER BY bytes DESC LIMIT 20"
         }
       ],
-      "description": "Hosts, local or remote, that sent the most data in the selected time range. Downloads show up under the remote servers (CDNs and so on) that sent them."
+      "description": "Hosts, local or remote, that sent the most data in the selected time range. Downloads show up under the remote servers (CDNs and so on) that sent them.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "bytes"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decbytes"
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "id": 204,
@@ -192,7 +210,24 @@
           "rawSql": "SELECT DstAS AS asn, if(DstAS = 0, 'Private or unknown (local traffic)', dictGetOrDefault('default.asns', 'name', DstAS, '')) AS name, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY DstAS ORDER BY bytes DESC LIMIT 20"
         }
       ],
-      "description": "Networks (autonomous systems) that received the most data in the selected time range. ASN 0 is traffic with no known network: mostly local and Tailscale addresses."
+      "description": "Networks (autonomous systems) that received the most data in the selected time range. ASN 0 is traffic with no known network: mostly local and Tailscale addresses.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "bytes"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decbytes"
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
