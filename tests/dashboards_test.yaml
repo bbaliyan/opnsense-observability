@@ -1,11 +1,8 @@
 suite: dashboard ConfigMaps
 templates:
-  - dashboards/connectivity-dashboard.yaml
-  - dashboards/opnsense-health-dashboard.yaml
-  - dashboards/opnsense-node-dashboard.yaml
+  - dashboards/internet-firewall-dashboard.yaml
 tests:
-  - it: renders the connectivity dashboard ConfigMap with the sidecar label
-    template: dashboards/connectivity-dashboard.yaml
+  - it: renders the Internet & Firewall dashboard ConfigMap with the sidecar label
     asserts:
       - isKind:
           of: ConfigMap
@@ -13,114 +10,73 @@ tests:
           path: metadata.labels.grafana_dashboard
           value: "1"
       - exists:
-          path: data["connectivity.json"]
-  - it: queries every dpinger metric the connectivity panels need
-    template: dashboards/connectivity-dashboard.yaml
-    asserts:
-      - matchRegex:
-          path: data["connectivity.json"]
-          pattern: opnsense_gateways_status\{name=~\\"\$gateway\\"\}
-      - matchRegex:
-          path: data["connectivity.json"]
-          pattern: opnsense_gateways_rtt_milliseconds\{name=~\\"\$gateway\\"\}
-      - matchRegex:
-          path: data["connectivity.json"]
-          pattern: opnsense_gateways_rttd_milliseconds\{name=~\\"\$gateway\\"\}
-      - matchRegex:
-          path: data["connectivity.json"]
-          pattern: opnsense_gateways_loss_percentage\{name=~\\"\$gateway\\"\}
-  - it: maps all three gateway states so an unknown gateway never reads as healthy
-    template: dashboards/connectivity-dashboard.yaml
-    asserts:
-      - matchRegex:
-          path: data["connectivity.json"]
-          pattern: '"2": \{\s*"text": "Unknown",\s*"color": "yellow"'
-      - matchRegex:
-          path: data["connectivity.json"]
-          pattern: '"showValue": "auto"'
-  - it: resolves every connectivity datasource through the DS_PROMETHEUS variable
-    template: dashboards/connectivity-dashboard.yaml
+          path: data["internet-firewall.json"]
+  - it: resolves every datasource through the DS_PROMETHEUS variable
     asserts:
       - notMatchRegex:
-          path: data["connectivity.json"]
-          pattern: '"type": "prometheus",\s*"uid": "[^$]'
-      - matchRegex:
-          path: data["connectivity.json"]
-          pattern: '"query": "label_values\(opnsense_gateways_status, name\)"'
-  - it: renders the health dashboard ConfigMap with the sidecar label
-    template: dashboards/opnsense-health-dashboard.yaml
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - equal:
-          path: metadata.labels.grafana_dashboard
-          value: "1"
-      - exists:
-          path: data["opnsense-health.json"]
-  - it: resolves every health datasource through the DS_PROMETHEUS variable
-    template: dashboards/opnsense-health-dashboard.yaml
-    asserts:
-      - notMatchRegex:
-          path: data["opnsense-health.json"]
+          path: data["internet-firewall.json"]
           pattern: '"type": "prometheus",\s*"uid": "[^$]'
       - notMatchRegex:
-          path: data["opnsense-health.json"]
+          path: data["internet-firewall.json"]
           pattern: __inputs|__requires
-  - it: drives node_exporter panels and exporter panels from separate instance variables
-    template: dashboards/opnsense-health-dashboard.yaml
+  - it: queries every dpinger metric the connectivity panels need
     asserts:
       - matchRegex:
-          path: data["opnsense-health.json"]
+          path: data["internet-firewall.json"]
+          pattern: opnsense_gateways_status\{opnsense_instance=\\"\$opnsense_instance\\",name=~\\"\$gateway\\"\}
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: opnsense_gateways_rtt_milliseconds\{opnsense_instance=\\"\$opnsense_instance\\",name=~\\"\$gateway\\"\}
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: opnsense_gateways_rttd_milliseconds\{opnsense_instance=\\"\$opnsense_instance\\",name=~\\"\$gateway\\"\}
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: opnsense_gateways_loss_percentage\{opnsense_instance=\\"\$opnsense_instance\\",name=~\\"\$gateway\\"\}
+  - it: maps all three gateway states so an unknown gateway never reads as healthy
+    asserts:
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: '"2": \{\s*"text": "Unknown",\s*"color": "yellow"'
+  - it: drives node_exporter panels and exporter panels from separate instance variables
+    asserts:
+      - matchRegex:
+          path: data["internet-firewall.json"]
           pattern: '"query": "label_values\(opnsense_up, opnsense_instance\)"'
       - matchRegex:
-          path: data["opnsense-health.json"]
-          pattern: '"query": "label_values\(node_boot_time_seconds, instance\)"'
+          path: data["internet-firewall.json"]
+          pattern: node_time_seconds\{instance=\\"\$node_instance\\"\}
       - matchRegex:
-          path: data["opnsense-health.json"]
-          pattern: node_boot_time_seconds\{instance=\\"\$node_instance\\"\}
-      - matchRegex:
-          path: data["opnsense-health.json"]
+          path: data["internet-firewall.json"]
           pattern: opnsense_services_status\{opnsense_instance=\\"\$opnsense_instance\\"\}
-      - notMatchRegex:
-          path: data["opnsense-health.json"]
-          pattern: 'node_[a-z_]*\{instance=\\"\$opnsense_instance'
       - matchRegex:
-          path: data["opnsense-health.json"]
-          pattern: 'device=~\\"\$fs_device\\"'
-      - matchRegex:
-          path: data["opnsense-health.json"]
+          path: data["internet-firewall.json"]
           pattern: 'interface=~\\"\$fw_interface\\"'
-  - it: renders the node dashboard ConfigMap with the sidecar label
-    template: dashboards/opnsense-node-dashboard.yaml
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - equal:
-          path: metadata.labels.grafana_dashboard
-          value: "1"
-      - exists:
-          path: data["opnsense-node.json"]
-  - it: resolves every node datasource through the DS_PROMETHEUS variable
-    template: dashboards/opnsense-node-dashboard.yaml
-    asserts:
       - notMatchRegex:
-          path: data["opnsense-node.json"]
-          pattern: '"type": "prometheus",\s*"uid": "[^$]'
-      - notMatchRegex:
-          path: data["opnsense-node.json"]
-          pattern: __inputs|__requires
+          path: data["internet-firewall.json"]
+          pattern: 'node_[a-z_]*\{instance=\\"\$opnsense_instance'
   - it: resolves WAN and LAN devices from the exporter's interface names
-    template: dashboards/opnsense-node-dashboard.yaml
     asserts:
       - matchRegex:
-          path: data["opnsense-node.json"]
+          path: data["internet-firewall.json"]
           pattern: 'interface=\\"\$wan\\"\}, device\)'
       - matchRegex:
-          path: data["opnsense-node.json"]
+          path: data["internet-firewall.json"]
           pattern: node_network_receive_bytes_total\{instance=\\"\$node_instance\\",device=\\"\$wan_device\\"\}
       - notMatchRegex:
-          path: data["opnsense-node.json"]
+          path: data["internet-firewall.json"]
           pattern: '\$job|igc[0-9]'
+  - it: carries the merged identity and the firewall interface picker
+    asserts:
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: '"uid": "internet-firewall"'
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: '"name": "fw_interface"'
+      - notMatchRegex:
+          path: data["internet-firewall.json"]
+          pattern: '\$(fs_device|interface)\b'
   - it: renders nothing when dashboards are disabled
     set:
       dashboards.enabled: false
