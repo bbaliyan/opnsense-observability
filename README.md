@@ -156,9 +156,8 @@ valid but the group is missing a privilege.
 ### 2. os-node_exporter plugin
 
 **This step is not optional in practice.** Many panels on the Internet & Firewall
-dashboard — uptime, temperature, CPU usage and utilization, load average,
-memory, swap, interrupts, context switches, filesystem, disk I/O and disk IOPS
-— read `node_*` metrics. Without this plugin and its scrape target, much of the
+dashboard — uptime, CPU usage, load average, memory, swap, interrupts,
+context switches and the WAN and LAN speed — read `node_*` metrics. Without this plugin and its scrape target, much of the
 dashboard shows "No data".
 
 1. **Firmware → Plugins** → search `os-node_exporter` → install.
@@ -354,7 +353,7 @@ Start from one of the shipped examples:
 | `opnsenseExporter.enabled` | Deploy opnsense-exporter, which polls the OPNsense REST API. |
 | `opnsenseExporter.opnsense.address` | OPNsense firewall address (required). |
 | `opnsenseExporter.opnsense.protocol` | `https` or `http` for the REST API. |
-| `opnsenseExporter.opnsense.instanceLabel` | Value of the `opnsense_instance` label the exporter applies to its `opnsense_*` metrics. It is the value the health dashboard's **OPNsense Instance** picker selects. |
+| `opnsenseExporter.opnsense.instanceLabel` | Value of the `opnsense_instance` label the exporter applies to its `opnsense_*` metrics. It is the value the Internet & Firewall dashboard's **OPNsense Instance** picker selects. |
 | `opnsenseExporter.opnsense.insecureSkipVerify` | Skip TLS verification of the firewall's API certificate. |
 | `opnsenseExporter.opnsense.apiKeySecretRef` | Secret reference holding the read-only API key. |
 | `opnsenseExporter.opnsense.apiSecretSecretRef` | Secret reference holding the read-only API secret. |
