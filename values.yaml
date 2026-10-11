@@ -86,7 +86,7 @@ akvorado:
   # -- Device names for the per-device traffic panels. A CronJob reads the DHCP
   # leases from the OPNsense dnsmasq API (reusing opnsenseExporter.opnsense
   # address and credentials) into a ClickHouse table. The API user needs the
-  # dnsmasq leases privilege, and DHCP must be served by dnsmasq.
+  # Services: Dnsmasq DNS/DHCP: Settings privilege, and DHCP must be served by dnsmasq.
   deviceNames:
     enabled: false
     schedule: "*/5 * * * *"
