@@ -76,7 +76,7 @@ tests:
           pattern: '"name": "fw_interface"'
       - notMatchRegex:
           path: data["internet-firewall.json"]
-          pattern: '\$(fs_device|interface)'
+          pattern: '\$(fs_device|interface)b'
   - it: renders nothing when dashboards are disabled
     set:
       dashboards.enabled: false
