@@ -58,3 +58,12 @@ tests:
       - notMatchRegex:
           path: data["outlet.yaml"]
           pattern: "metadata"
+  - it: merges the outlet extra configuration over the geoip block without duplicating the key
+    set:
+      akvorado.outlet.extraConfig:
+        geoip:
+          optional: false
+    asserts:
+      - notMatchRegex:
+          path: data["outlet.yaml"]
+          pattern: "geoip:[\s\S]*geoip:"

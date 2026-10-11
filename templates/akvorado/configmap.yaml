@@ -38,15 +38,8 @@ data:
           workers: 2
   outlet.yaml: |
     ---
-    geoip:
-      optional: true
-      asn-database:
-        - /usr/share/GeoIP/dbip-asn-lite.mmdb
-      geo-database:
-        - /usr/share/GeoIP/dbip-country-lite.mmdb
-{{- with .Values.akvorado.outlet.extraConfig }}
-{{ toYaml . | indent 4 }}
-{{- end }}
+{{- $outlet := mustMergeOverwrite (dict "geoip" (dict "optional" true "asn-database" (list "/usr/share/GeoIP/dbip-asn-lite.mmdb") "geo-database" (list "/usr/share/GeoIP/dbip-country-lite.mmdb"))) (deepCopy (.Values.akvorado.outlet.extraConfig | default dict)) }}
+{{ toYaml $outlet | indent 4 }}
   console.yaml: |
     ---
     http:

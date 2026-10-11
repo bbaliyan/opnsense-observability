@@ -317,12 +317,29 @@ single-node ClickHouse.
 - GeoIP data for the destination-country panel comes from
   [DB-IP Lite](https://db-ip.com/db/lite.php): free, no account or license key,
   refreshed monthly by an in-chart CronJob. Attribution: this product includes
-  GeoLite2 data created by DB-IP, distributed under the
+  IP geolocation data by DB-IP, distributed under the
   [CC BY 4.0 license](https://creativecommons.org/licenses/by/4.0/).
-- The Akvorado console and the traffic dashboard need a Grafana **ClickHouse**
+- The traffic dashboard needs a Grafana **ClickHouse**
   datasource pointed at the `<release>-clickhouse` Service on port `9000`. This
   chart does not provision Grafana datasources, so add one through your Grafana
   provisioning of choice.
+- By default Akvorado asks the exporter for interface names over SNMP. A firewall
+  that doesn't answer SNMP (OPNsense doesn't by default) makes the metadata
+  provider give up, and every flow is then dropped. Set `akvorado.outlet.extraConfig`
+  to a static provider instead, keyed by the address the flows arrive from:
+
+  ```yaml
+  akvorado:
+    outlet:
+      extraConfig:
+        metadata:
+          providers:
+            - type: static
+              exporters:
+                192.168.0.0/16:
+                  name: firewall
+                  default: {name: unknown, description: unknown, speed: 1000}
+  ```
 - ClickHouse's default user has no password. That is acceptable because the
   Service is a plain `ClusterIP` never exposed outside the cluster, but worth
   knowing before running this chart on a shared or multi-tenant cluster.
@@ -375,6 +392,7 @@ Start from one of the shipped examples:
 | `akvorado.netflow.serviceType` | Service type for the inlet's NetFlow listener; `LoadBalancer` so OPNsense on the LAN can reach it. |
 | `akvorado.kafka.brokers` | External Kafka broker list; empty (default) uses the bundled Redpanda's internal listener. |
 | `akvorado.clickhouse.persistence.size` | PVC size for the vendored single-node ClickHouse StatefulSet. |
+| `akvorado.outlet.extraConfig` | Map merged into Akvorado's outlet configuration, e.g. a static `metadata` provider for an exporter that doesn't answer SNMP. Keys set here are merged over the chart's own `geoip` block. |
 | `akvorado.geoip.enabled` | Auto-download GeoIP databases via an in-chart CronJob. |
 | `akvorado.geoip.source` | `dbip-lite` (no account needed) or `maxmind`. |
 | `akvorado.geoip.updateSchedule` | Cron schedule for the GeoIP refresh job. |

@@ -43,3 +43,9 @@ tests:
       - notMatchRegex:
           path: data["traffic.json"]
           pattern: ProtoName
+      - matchRegex:
+          path: data["traffic.json"]
+          pattern: 'DstCountry AS lookup'
+      - matchRegex:
+          path: data["traffic.json"]
+          pattern: '"gazetteer": "public/gazetteer/countries.json"'

@@ -56,9 +56,49 @@
           "editorType": "sql",
           "queryType": "table",
           "format": 1,
-          "rawSql": "SELECT DstCountry AS country, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY DstCountry ORDER BY bytes DESC"
+          "rawSql": "SELECT DstCountry AS lookup, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY DstCountry ORDER BY bytes DESC"
         }
-      ]
+      ],
+      "options": {
+        "view": {
+          "id": "zero",
+          "lat": 0,
+          "lon": 0,
+          "zoom": 1
+        },
+        "controls": {
+          "showZoom": true,
+          "mouseWheelZoom": true
+        },
+        "basemap": {
+          "type": "default",
+          "name": "Basemap"
+        },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Destination country",
+            "location": {
+              "mode": "lookup",
+              "lookup": "lookup",
+              "gazetteer": "public/gazetteer/countries.json"
+            },
+            "config": {
+              "size": {
+                "field": "bytes",
+                "min": 3,
+                "max": 25,
+                "fixed": 5
+              },
+              "color": {
+                "field": "bytes",
+                "fixed": "blue"
+              },
+              "showLegend": true
+            }
+          }
+        ]
+      }
     },
     {
       "id": 2,
