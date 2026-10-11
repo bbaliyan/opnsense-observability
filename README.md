@@ -76,10 +76,15 @@ the per-interface firewall panels to your NIC names (`igb*`, `ix*`, `em*`,
 `re*`). Both default to all values.
 
 The **OPNsense Connectivity** dashboard renders gateway status, RTT, jitter and
-loss from the firewall's own dpinger monitoring.
+loss from the firewall's own dpinger monitoring. Loss is drawn as bars on an
+axis that starts at 2 %, with the worst loss, average loss and minutes with any
+loss for the chosen range beside it, so a 1 % blip is easy to see.
 
-The **OPNsense Node** dashboard (adapted from grafana.com dashboard 19366) is
-built on `os-node_exporter` and adds per-interface packets, multicast, drops
+The **OPNsense Node** dashboard opens with the internet connection: current
+download and upload speed (with a sparkline), the peak and the total transferred
+in the chosen range, and a speed chart, then the same gateway status, RTT, jitter
+and loss panels as the Connectivity dashboard. Below that is the system section
+(adapted from grafana.com dashboard 19366), built on `os-node_exporter`, which adds per-interface packets, multicast, drops
 and errors, plus syscalls, forks and traps. It carries the same two instance
 pickers, and its **WAN Interface** and **LAN Interface** pickers take
 OPNsense's interface names (default `WAN` and `LAN`). The dashboard resolves
