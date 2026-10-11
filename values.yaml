@@ -73,6 +73,11 @@ akvorado:
     resources:
       requests: {cpu: 250m, memory: 512Mi}
       limits: {memory: 2Gi}
+  outlet:
+    # -- Merged into Akvorado's outlet configuration. Akvorado asks the exporter
+    # for its interface names over SNMP by default; a firewall that doesn't
+    # answer SNMP needs a static provider here (see Akvorado's metadata docs).
+    extraConfig: {}
   geoip:
     enabled: true               # auto-download DB-IP Lite .mmdb files
     source: dbip-lite            # dbip-lite (default, no account) | maxmind

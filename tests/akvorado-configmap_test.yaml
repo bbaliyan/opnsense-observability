@@ -37,3 +37,24 @@ tests:
       - matchRegex:
           path: data["outlet.yaml"]
           pattern: "dbip-country-lite.mmdb"
+  - it: merges the outlet extra configuration, e.g. a static metadata provider
+    set:
+      akvorado.outlet.extraConfig:
+        metadata:
+          providers:
+            - type: static
+              exporters:
+                192.0.2.1:
+                  name: firewall
+    asserts:
+      - matchRegex:
+          path: data["outlet.yaml"]
+          pattern: "type: static"
+      - matchRegex:
+          path: data["outlet.yaml"]
+          pattern: "name: firewall"
+  - it: adds nothing to the outlet configuration by default
+    asserts:
+      - notMatchRegex:
+          path: data["outlet.yaml"]
+          pattern: "metadata"

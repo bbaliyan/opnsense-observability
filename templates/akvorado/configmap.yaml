@@ -44,6 +44,9 @@ data:
         - /usr/share/GeoIP/dbip-asn-lite.mmdb
       geo-database:
         - /usr/share/GeoIP/dbip-country-lite.mmdb
+{{- with .Values.akvorado.outlet.extraConfig }}
+{{ toYaml . | indent 4 }}
+{{- end }}
   console.yaml: |
     ---
     http:
