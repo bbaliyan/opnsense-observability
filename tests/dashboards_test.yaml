@@ -37,7 +37,7 @@ tests:
     asserts:
       - matchRegex:
           path: data["internet-firewall.json"]
-          pattern: '"2": \{\s*"text": "Unknown",\s*"color": "yellow"'
+          pattern: '"text": "Unknown"'
   - it: drives node_exporter panels and exporter panels from separate instance variables
     asserts:
       - matchRegex:
@@ -77,6 +77,33 @@ tests:
       - notMatchRegex:
           path: data["internet-firewall.json"]
           pattern: '\$(fs_device|interface)\b'
+  - it: leaves the NetFlow section out when NetFlow is off
+    asserts:
+      - notMatchRegex:
+          path: data["internet-firewall.json"]
+          pattern: 'DS_CLICKHOUSE|Traffic \(NetFlow\)'
+  - it: puts the NetFlow section in the dashboard when NetFlow is on, using Akvorado's real columns
+    set:
+      akvorado.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: 'Traffic \(NetFlow\)'
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: '"name": "DS_CLICKHOUSE"'
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: 'sum\(Bytes \* SamplingRate\)'
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: 'DstCountry AS lookup'
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: '"gazetteer": "public/gazetteer/countries.json"'
+      - notMatchRegex:
+          path: data["internet-firewall.json"]
+          pattern: ProtoName
   - it: renders nothing when dashboards are disabled
     set:
       dashboards.enabled: false

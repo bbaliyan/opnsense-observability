@@ -52,20 +52,23 @@ single most common setup mistake.
 | Suricata EVE JSON | Firewall pushes | TCP syslog, RFC5424 | Logging target scoped to `suricata` | `<release>-evebox-syslog` Service (`ClusterIP` by default — publish it) |
 
 What Grafana reads: **Prometheus** for the Internet & Firewall dashboard,
-**ClickHouse** for the traffic dashboard.
+**ClickHouse** for the NetFlow section of the same dashboard.
 
 ### The Internet & Firewall dashboard
 
-It opens with the internet connection: current download and upload speed (the
-last hour as a sparkline), the peak and the total transferred in the chosen
-range, and a speed chart. Then come the gateways from the firewall's own
-dpinger monitoring (status, RTT, jitter and loss), the firewall (service
+It opens with the internet connection: the current download and upload speed
+next to a speed chart for the chosen range, then the peak and the total
+transferred in that range. Then come the gateways from the firewall's own
+dpinger monitoring (status, RTT, jitter and loss), the NetFlow traffic
+(destination countries, protocols, top devices and networks; only when
+`akvorado.enabled`), the firewall (service
 status, TCP connections by state, passed and blocked IPv4 packets, per-interface
 pass and block counts), and a system section adapted from grafana.com dashboard 19366
 (CPU, memory, swap, load, interrupts, per-interface packets, multicast, drops
 and errors). Loss is drawn as bars on a 0-2 % axis that grows only when loss is
 higher, with the worst loss, average loss and minutes with any loss for the
 chosen range beside it, so a 1 % blip is easy to see.
+Hover the (i) on a panel for what it shows and how to read it.
 
 It has these pickers, because it draws on two independent scrape targets:
 
@@ -319,7 +322,7 @@ single-node ClickHouse.
   refreshed monthly by an in-chart CronJob. Attribution: this product includes
   IP geolocation data by DB-IP, distributed under the
   [CC BY 4.0 license](https://creativecommons.org/licenses/by/4.0/).
-- The traffic dashboard needs a Grafana **ClickHouse**
+- The dashboard's NetFlow section needs a Grafana **ClickHouse**
   datasource pointed at the `<release>-clickhouse` Service on port `9000`. This
   chart does not provision Grafana datasources, so add one through your Grafana
   provisioning of choice.

@@ -1,4 +1,19 @@
 {{- if .Values.dashboards.enabled }}
+{{- $d := .Files.Get "files/dashboards/internet-firewall.json" | fromJson }}
+{{- if .Values.akvorado.enabled }}
+{{- /* The NetFlow section goes in front of the Firewall row; everything from there down moves to make room. */}}
+{{- $n := .Files.Get "files/dashboards/netflow-section.json" | fromJson }}
+{{- $at := 0 }}
+{{- range $d.panels }}
+{{- if and (eq .type "row") (eq .title "Firewall") }}{{ $at = int .gridPos.y }}{{ end }}
+{{- end }}
+{{- range $d.panels }}
+{{- if ge (int .gridPos.y) $at }}{{ $_ := set .gridPos "y" (add (int .gridPos.y) (int $n.height)) }}{{ end }}
+{{- end }}
+{{- range $n.panels }}{{ $_ := set .gridPos "y" (add (int .gridPos.y) $at) }}{{ end }}
+{{- $_ := set $d "panels" (concat $d.panels $n.panels) }}
+{{- $_ := set $d.templating "list" (append $d.templating.list $n.variable) }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -10,5 +25,5 @@ metadata:
     grafana_folder: {{ .Values.dashboards.folder }}
 data:
   internet-firewall.json: |
-{{ .Files.Get "files/dashboards/internet-firewall.json" | indent 4 }}
+{{ $d | toPrettyJson | indent 4 }}
 {{- end }}
