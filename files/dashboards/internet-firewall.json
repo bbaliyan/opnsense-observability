@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Internet speed and gateway connectivity, firewall services and rules, and host and per-interface counters of the firewall. System panels based on grafana.com dashboard 19366.",
+  "description": "Internet speed and gateway connectivity, firewall services and packet counters, and host and per-interface counters of the firewall. System panels based on grafana.com dashboard 19366.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -1134,7 +1134,7 @@
         "x": 0,
         "y": 37,
         "w": 24,
-        "h": 7
+        "h": 9
       },
       "id": 83,
       "options": {
@@ -1368,7 +1368,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 44,
+        "y": 46,
         "w": 8,
         "h": 9
       },
@@ -1508,7 +1508,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 44,
+        "y": 46,
         "w": 8,
         "h": 9
       },
@@ -1653,7 +1653,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 44,
+        "y": 46,
         "w": 8,
         "h": 9
       },
@@ -1822,7 +1822,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 53,
+        "y": 55,
         "w": 24,
         "h": 8
       },
@@ -1951,7 +1951,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 61
+        "y": 63
       },
       "panels": []
     },
@@ -1965,7 +1965,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 62,
+        "y": 64,
         "w": 5,
         "h": 3
       },
@@ -2066,7 +2066,7 @@
       },
       "gridPos": {
         "x": 5,
-        "y": 62,
+        "y": 64,
         "w": 5,
         "h": 3
       },
@@ -2150,7 +2150,7 @@
       },
       "gridPos": {
         "x": 10,
-        "y": 62,
+        "y": 64,
         "w": 5,
         "h": 3
       },
@@ -2235,7 +2235,7 @@
       },
       "gridPos": {
         "x": 15,
-        "y": 62,
+        "y": 64,
         "w": 5,
         "h": 3
       },
@@ -2320,7 +2320,7 @@
       },
       "gridPos": {
         "x": 20,
-        "y": 62,
+        "y": 64,
         "w": 4,
         "h": 3
       },
@@ -2474,7 +2474,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 65,
+        "y": 67,
         "w": 6,
         "h": 4
       },
@@ -2571,7 +2571,7 @@
       },
       "gridPos": {
         "x": 6,
-        "y": 65,
+        "y": 67,
         "w": 6,
         "h": 4
       },
@@ -2731,7 +2731,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 65,
+        "y": 67,
         "w": 6,
         "h": 4
       },
@@ -2833,7 +2833,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 65,
+        "y": 67,
         "w": 6,
         "h": 4
       },
@@ -2931,7 +2931,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 69,
+        "y": 71,
         "w": 24,
         "h": 5
       },
@@ -3046,7 +3046,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 74,
+        "y": 76,
         "w": 12,
         "h": 6
       },
@@ -3191,7 +3191,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 74,
+        "y": 76,
         "w": 12,
         "h": 6
       },
@@ -3336,7 +3336,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 80,
+        "y": 82,
         "w": 12,
         "h": 6
       },
@@ -3481,7 +3481,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 80,
+        "y": 82,
         "w": 12,
         "h": 6
       },
@@ -3659,7 +3659,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 86,
+        "y": 88,
         "w": 12,
         "h": 6
       },
@@ -3870,7 +3870,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 86,
+        "y": 88,
         "w": 12,
         "h": 6
       },
@@ -3991,7 +3991,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 92,
+        "y": 94,
         "w": 24,
         "h": 6
       },

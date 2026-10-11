@@ -66,6 +66,17 @@ tests:
       - notMatchRegex:
           path: data["internet-firewall.json"]
           pattern: '\$job|igc[0-9]'
+  - it: carries the merged identity and the firewall interface picker
+    asserts:
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: '"uid": "internet-firewall"'
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: '"name": "fw_interface"'
+      - notMatchRegex:
+          path: data["internet-firewall.json"]
+          pattern: '\$(fs_device|interface)'
   - it: renders nothing when dashboards are disabled
     set:
       dashboards.enabled: false

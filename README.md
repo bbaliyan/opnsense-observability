@@ -61,7 +61,7 @@ last hour as a sparkline), the peak and the total transferred in the chosen
 range, and a speed chart. Then come the gateways from the firewall's own
 dpinger monitoring (status, RTT, jitter and loss), the firewall (service
 status, TCP connections by state, passed and blocked IPv4 packets, per-interface
-rule statistics), and a system section adapted from grafana.com dashboard 19366
+pass and block counts), and a system section adapted from grafana.com dashboard 19366
 (CPU, memory, swap, load, interrupts, per-interface packets, multicast, drops
 and errors). Loss is drawn as bars on a 0-2 % axis that grows only when loss is
 higher, with the worst loss, average loss and minutes with any loss for the
@@ -78,7 +78,7 @@ It has these pickers, because it draws on two independent scrape targets:
   It drives the uptime, CPU, load, memory, swap, interrupt and WAN/LAN speed
   panels.
 - **Gateway** and **Firewall Interface** scope the connectivity panels and the
-  per-interface firewall panels. Both default to all values.
+  Firewall Statistics by Interface table. Both default to all values.
 - **WAN Interface** and **LAN Interface** take OPNsense's interface names
   (default `WAN` and `LAN`). The dashboard resolves them to NIC devices (`ix0`,
   `vtnet1`, and so on) through the exporter's `opnsense_interfaces_*` metrics.
@@ -157,7 +157,8 @@ valid but the group is missing a privilege.
 
 **This step is not optional in practice.** Many panels on the Internet & Firewall
 dashboard — uptime, CPU usage, load average, memory, swap, interrupts,
-context switches and the WAN and LAN speed — read `node_*` metrics. Without this plugin and its scrape target, much of the
+context switches and the WAN and LAN speed — read `node_*` metrics.
+Without this plugin and its scrape target, much of the
 dashboard shows "No data".
 
 1. **Firmware → Plugins** → search `os-node_exporter` → install.
@@ -214,8 +215,8 @@ add them to a Gateway Group used by firewall rules. Leaving them alone is what
 keeps them monitor-only, with no routing impact.
 
 Confirm each row appears on the Gateways list with RTT / RTTd / Loss columns
-populating within a few seconds. No service restart is needed. The Connectivity
-dashboard offers a `$gateway` template variable to pick between whatever
+populating within a few seconds. No service restart is needed. The Internet & Firewall
+dashboard's **Gateway** picker (`$gateway`) chooses between whatever
 gateways exist, and the gateway-down alert covers all of them.
 
 ### 5. NetFlow export
