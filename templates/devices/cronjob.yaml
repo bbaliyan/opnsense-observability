@@ -1,4 +1,4 @@
-{{- if and .Values.akvorado.enabled .Values.akvorado.deviceNames.enabled .Values.opnsenseExporter.enabled }}
+{{- if and .Values.akvorado.enabled .Values.akvorado.deviceNames.enabled }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -30,17 +30,6 @@ spec:
             - name: sync
               image: "{{ .Values.akvorado.deviceNames.image.repository }}:{{ .Values.akvorado.deviceNames.image.tag }}"
               command: ["/bin/sh", "/scripts/sync.sh"]
-              env:
-                - name: OPNSENSE_API_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ required "opnsenseExporter.opnsense.apiKeySecretRef.name is required" .Values.opnsenseExporter.opnsense.apiKeySecretRef.name }}
-                      key: {{ .Values.opnsenseExporter.opnsense.apiKeySecretRef.key }}
-                - name: OPNSENSE_API_SECRET
-                  valueFrom:
-                    secretKeyRef:
-                      name: {{ required "opnsenseExporter.opnsense.apiSecretSecretRef.name is required" .Values.opnsenseExporter.opnsense.apiSecretSecretRef.name }}
-                      key: {{ .Values.opnsenseExporter.opnsense.apiSecretSecretRef.key }}
               securityContext:
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true

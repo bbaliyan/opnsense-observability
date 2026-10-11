@@ -5,9 +5,7 @@ templates:
 set:
   akvorado.enabled: true
   akvorado.deviceNames.enabled: true
-  opnsenseExporter.opnsense.address: 192.168.1.1
-  opnsenseExporter.opnsense.apiKeySecretRef.name: fw-api
-  opnsenseExporter.opnsense.apiSecretSecretRef.name: fw-api
+  akvorado.deviceNames.prometheusUrl: http://prom.example:9090
 tests:
   - it: renders nothing when NetFlow is off
     set:
@@ -32,43 +30,38 @@ tests:
       - equal:
           path: spec.concurrencyPolicy
           value: Forbid
-  - it: reuses the exporter's API credentials from the Secret, never inline
+  - it: holds no firewall credentials and runs with a read-only filesystem
     template: devices/cronjob.yaml
     asserts:
-      - equal:
-          path: spec.jobTemplate.spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
-          value: fw-api
+      - notExists:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
           value: true
-  - it: reads the dnsmasq leases from the firewall and writes them to ClickHouse
+  - it: reads the lease series from Prometheus and writes them to ClickHouse
     template: devices/configmap.yaml
     release:
       name: obs
     asserts:
       - matchRegex:
           path: data["sync.sh"]
-          pattern: "https://192.168.1.1"
+          pattern: 'PROM="http://prom.example:9090"'
       - matchRegex:
           path: data["sync.sh"]
-          pattern: "api/dnsmasq/leases/search"
+          pattern: "dhcp_lease_expiry"
+      - matchRegex:
+          path: data["sync.sh"]
+          pattern: "topk by \\(ip\\) \\(1,"
       - matchRegex:
           path: data["sync.sh"]
           pattern: "http://obs-opnsense-observability-clickhouse:8123"
       - notMatchRegex:
           path: data["sync.sh"]
-          pattern: "curl -sf -k"
-  - it: skips TLS verification only when asked to
+          pattern: "api/dnsmasq|OPNSENSE_API"
+  - it: fails the render when no Prometheus URL is given
     template: devices/configmap.yaml
     set:
-      opnsenseExporter.opnsense.insecureSkipVerify: true
+      akvorado.deviceNames.prometheusUrl: ""
     asserts:
-      - matchRegex:
-          path: data["sync.sh"]
-          pattern: 'TLS="-k"'
-  - it: renders nothing without the exporter's firewall settings
-    set:
-      opnsenseExporter.enabled: false
-    asserts:
-      - hasDocuments:
-          count: 0
+      - failedTemplate:
+          errorMessage: akvorado.deviceNames.prometheusUrl is required
