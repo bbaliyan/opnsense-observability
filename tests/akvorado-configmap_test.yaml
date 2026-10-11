@@ -67,3 +67,15 @@ tests:
       - notMatchRegex:
           path: data["outlet.yaml"]
           pattern: "geoip:[\s\S]*geoip:"
+  - it: stamps flows with the time they started by default
+    asserts:
+      - matchRegex:
+          path: data["inlet.yaml"]
+          pattern: "timestamp-source: netflow-first-switched"
+  - it: lets the timestamp source be changed
+    set:
+      akvorado.netflow.timestampSource: udp
+    asserts:
+      - matchRegex:
+          path: data["inlet.yaml"]
+          pattern: "timestamp-source: udp"

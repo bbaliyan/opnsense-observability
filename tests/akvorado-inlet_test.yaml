@@ -1,5 +1,6 @@
 suite: akvorado inlet
 templates:
+  - akvorado/configmap.yaml
   - akvorado/inlet-deployment.yaml
   - akvorado/inlet-service.yaml
   - akvorado/inlet-servicemonitor.yaml

@@ -58,6 +58,11 @@ akvorado:
   netflow:
     listenPort: 2055
     serviceType: LoadBalancer   # so OPNsense on the LAN side can reach it
+    # -- Which clock stamps a flow: udp (when the export packet arrived), netflow-packet
+    # (the exporter's packet time) or netflow-first-switched (when the flow began).
+    # udp books a long flow at the moment the firewall exports it, up to the
+    # firewall's active timeout late.
+    timestampSource: netflow-first-switched
   kafka:
     # Empty = compute from the bundled Redpanda's internal Kafka listener
     # ({{ .Release.Name }}:9093 — the redpanda chart's own fullname has no
@@ -78,6 +83,16 @@ akvorado:
     # for its interface names over SNMP by default; a firewall that doesn't
     # answer SNMP needs a static provider here (see Akvorado's metadata docs).
     extraConfig: {}
+  # -- Device names for the per-device traffic panels. A CronJob reads the DHCP
+  # leases from the OPNsense dnsmasq API (reusing opnsenseExporter.opnsense
+  # address and credentials) into a ClickHouse table. The API user needs the
+  # dnsmasq leases privilege, and DHCP must be served by dnsmasq.
+  deviceNames:
+    enabled: false
+    schedule: "*/5 * * * *"
+    image:
+      repository: curlimages/curl
+      tag: "8.11.1"
   geoip:
     enabled: true               # auto-download DB-IP Lite .mmdb files
     source: dbip-lite            # dbip-lite (default, no account) | maxmind

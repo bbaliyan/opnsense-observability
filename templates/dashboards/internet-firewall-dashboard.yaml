@@ -13,7 +13,7 @@
 {{- if lt $at 0 }}{{ fail "the dashboard has no Firewall row to put the NetFlow section in front of" }}{{ end }}
 {{- range $n.panels }}{{ $_ := set .gridPos "y" (add (int .gridPos.y) $at) }}{{ end }}
 {{- $_ := set $d "panels" (concat $d.panels $n.panels) }}
-{{- $_ := set $d.templating "list" (append $d.templating.list $n.variable) }}
+{{- range $n.variables }}{{ $_ := set $d.templating "list" (append $d.templating.list .) }}{{ end }}
 {{- end }}
 apiVersion: v1
 kind: ConfigMap

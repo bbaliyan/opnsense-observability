@@ -1,0 +1,74 @@
+suite: device names (DHCP leases into ClickHouse)
+templates:
+  - devices/configmap.yaml
+  - devices/cronjob.yaml
+set:
+  akvorado.enabled: true
+  akvorado.deviceNames.enabled: true
+  opnsenseExporter.opnsense.address: 192.168.1.1
+  opnsenseExporter.opnsense.apiKeySecretRef.name: fw-api
+  opnsenseExporter.opnsense.apiSecretSecretRef.name: fw-api
+tests:
+  - it: renders nothing when NetFlow is off
+    set:
+      akvorado.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: renders nothing unless device names are switched on
+    set:
+      akvorado.deviceNames.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+  - it: runs on the configured schedule and never overlaps itself
+    template: devices/cronjob.yaml
+    set:
+      akvorado.deviceNames.schedule: "*/10 * * * *"
+    asserts:
+      - equal:
+          path: spec.schedule
+          value: "*/10 * * * *"
+      - equal:
+          path: spec.concurrencyPolicy
+          value: Forbid
+  - it: reuses the exporter's API credentials from the Secret, never inline
+    template: devices/cronjob.yaml
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[0].valueFrom.secretKeyRef.name
+          value: fw-api
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+  - it: reads the dnsmasq leases from the firewall and writes them to ClickHouse
+    template: devices/configmap.yaml
+    release:
+      name: obs
+    asserts:
+      - matchRegex:
+          path: data["sync.sh"]
+          pattern: "https://192.168.1.1"
+      - matchRegex:
+          path: data["sync.sh"]
+          pattern: "api/dnsmasq/leases/search"
+      - matchRegex:
+          path: data["sync.sh"]
+          pattern: "http://obs-opnsense-observability-clickhouse:8123"
+      - notMatchRegex:
+          path: data["sync.sh"]
+          pattern: "curl -sf -k"
+  - it: skips TLS verification only when asked to
+    template: devices/configmap.yaml
+    set:
+      opnsenseExporter.opnsense.insecureSkipVerify: true
+    asserts:
+      - matchRegex:
+          path: data["sync.sh"]
+          pattern: 'TLS="-k"'
+  - it: renders nothing without the exporter's firewall settings
+    set:
+      opnsenseExporter.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

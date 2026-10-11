@@ -1,5 +1,6 @@
 suite: akvorado console
 templates:
+  - akvorado/configmap.yaml
   - akvorado/console-deployment.yaml
   - akvorado/console-service.yaml
   - akvorado/console-ingress.yaml
