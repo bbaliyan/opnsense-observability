@@ -83,12 +83,15 @@ akvorado:
     # for its interface names over SNMP by default; a firewall that doesn't
     # answer SNMP needs a static provider here (see Akvorado's metadata docs).
     extraConfig: {}
-  # -- Device names for the per-device traffic panels. A CronJob reads the DHCP
-  # leases from the OPNsense dnsmasq API (reusing opnsenseExporter.opnsense
-  # address and credentials) into a ClickHouse table. The API user needs the
-  # Services: Dnsmasq DNS/DHCP: Settings privilege, and DHCP must be served by dnsmasq.
+  # -- Device names for the per-device traffic panels. A CronJob reads the
+  # dhcp_lease_expiry{ip,hostname} series from Prometheus into a ClickHouse
+  # table. Telegraf on the firewall publishes those series from the dnsmasq
+  # lease file (see the README), so no OPNsense API credentials are involved.
   deviceNames:
     enabled: false
+    # -- Base URL of the Prometheus that scrapes the firewall's Telegraf, e.g.
+    # http://prometheus.monitoring.svc:9090. Required when enabled.
+    prometheusUrl: ""
     schedule: "*/5 * * * *"
     image:
       repository: curlimages/curl

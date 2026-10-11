@@ -240,8 +240,8 @@ Only relevant with `akvorado.enabled: true`.
    (`akvorado.netflow.timestampSource`), but a flow lasting 30 minutes still
    lands in its first minute unless the timeout is short. Leave **Inactive
    Timeout** at `15`.
-4. For device names, give the API user the **Services: Dnsmasq DNS/DHCP: Settings** privilege (see
-   *Device names* below).
+4. For device names, publish the DHCP leases from the firewall with Telegraf (see
+   *Device names* below). It needs no API privilege.
 
 ### 6. Suricata EVE syslog output
 
@@ -337,15 +337,37 @@ single-node ClickHouse.
   datasource pointed at the `<release>-clickhouse` Service on port `9000`. This
   chart does not provision Grafana datasources, so add one through your Grafana
   provisioning of choice.
-- **Device names.** The per-device panels show a device's DHCP hostname. A
-  CronJob (`akvorado.deviceNames.enabled: true`) reads the leases from OPNsense's dnsmasq API
-  every 5 minutes into the ClickHouse table `default.device_names`, using the
-  same API credentials as the exporter. That API user needs the
-  **Services: Dnsmasq DNS/DHCP: Settings** privilege (System → Access → Users →
-  the user → Effective Privileges). OPNsense has no read-only variant: it covers
-  the whole dnsmasq API, so consider a dedicated API user for it. Devices without a hostname show their IP. Names are looked up when
-  the dashboard loads, so old traffic gets the latest name for its IP. Traffic of
-  everything behind the VPN pod is credited to the node running it.
+- **Device names.** The per-device panels show a device's DHCP hostname. Telegraf
+  on the firewall reads the dnsmasq lease file and publishes one
+  `dhcp_lease_expiry{ip,hostname}` series per lease (copy
+  `examples/telegraf-dhcp-leases.conf` to `/usr/local/etc/telegraf.d/` on the firewall
+  and restart Telegraf; the file is world-readable, so no privilege is involved).
+  The OPNsense Telegraf plugin's Prometheus output must be enabled, and Prometheus must scrape it
+  (port 9273 by default). Keep only the lease series, so the rest of Telegraf's output stays out:
+
+  ```yaml
+  extraObjects:
+    - apiVersion: monitoring.coreos.com/v1alpha1
+      kind: ScrapeConfig
+      metadata:
+        name: os-telegraf-dhcp-leases
+        labels: {release: prometheus}   # whatever your Prometheus selects on
+      spec:
+        staticConfigs:
+          - targets: ["<firewall>:9273"]
+            labels: {job: os-telegraf}
+        scrapeInterval: 60s
+        metricRelabelings:
+          - {sourceLabels: [__name__], regex: "dhcp_lease_.*", action: keep}
+  ```
+
+  A CronJob
+  (`akvorado.deviceNames.enabled: true`, with `akvorado.deviceNames.prometheusUrl`) copies
+  those series every 5 minutes into the ClickHouse table `default.device_names`. No OPNsense
+  credentials are used, so the exporter's API user stays read-only. A lease that expires drops out
+  of Prometheus on its own, but its name stays in `device_names`; devices without a hostname, and static hosts outside the DHCP
+  range, show their IP. Names are looked up when the dashboard loads, so old traffic gets the
+  latest name for its IP. Traffic of everything behind the VPN pod is credited to the node running it.
 - By default Akvorado asks the exporter for interface names over SNMP. A firewall
   that doesn't answer SNMP (OPNsense doesn't by default) makes the metadata
   provider give up, and every flow is then dropped. Set `akvorado.outlet.extraConfig`
@@ -414,7 +436,8 @@ Start from one of the shipped examples:
 | `akvorado.netflow.listenPort` | UDP port the inlet listens on for NetFlow records. |
 | `akvorado.netflow.serviceType` | Service type for the inlet's NetFlow listener; `LoadBalancer` so OPNsense on the LAN can reach it. |
 | `akvorado.netflow.timestampSource` | Which time stamps a flow: `netflow-first-switched` (default, when it began), `netflow-packet` or `udp` (when the export arrived). |
-| `akvorado.deviceNames.enabled` | Sync DHCP leases from OPNsense into ClickHouse so the device panels show names. Default `false`; needs OPNsense dnsmasq DHCP and the *Services: Dnsmasq DNS/DHCP: Settings* privilege on the API user. |
+| `akvorado.deviceNames.enabled` | Sync DHCP leases from Prometheus into ClickHouse so the device panels show names. Default `false`; needs OPNsense dnsmasq DHCP and Telegraf publishing the leases (see *Device names*). |
+| `akvorado.deviceNames.prometheusUrl` | Base URL of the Prometheus that scrapes the firewall's Telegraf. Required when device names are enabled. |
 | `akvorado.deviceNames.schedule` | Cron schedule of the lease sync. Default every 5 minutes. |
 | `akvorado.kafka.brokers` | External Kafka broker list; empty (default) uses the bundled Redpanda's internal listener. |
 | `akvorado.clickhouse.persistence.size` | PVC size for the vendored single-node ClickHouse StatefulSet. |
