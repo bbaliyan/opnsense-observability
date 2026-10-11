@@ -34,7 +34,7 @@ tests:
     asserts:
       - matchRegex:
           path: data["connectivity.json"]
-          pattern: '"2": \{"text": "Unknown", "color": "yellow"'
+          pattern: '"2": \{\s*"text": "Unknown",\s*"color": "yellow"'
       - matchRegex:
           path: data["connectivity.json"]
           pattern: '"showValue": "auto"'

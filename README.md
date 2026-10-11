@@ -76,22 +76,28 @@ the per-interface firewall panels to your NIC names (`igb*`, `ix*`, `em*`,
 `re*`). Both default to all values.
 
 The **OPNsense Connectivity** dashboard renders gateway status, RTT, jitter and
-loss from the firewall's own dpinger monitoring. Loss is drawn as bars on an
-axis that starts at 2 %, with the worst loss, average loss and minutes with any
-loss for the chosen range beside it, so a 1 % blip is easy to see.
+loss from the firewall's own dpinger monitoring. Loss is drawn as bars on a
+0-2 % axis that grows only when loss is higher, with the worst loss, average
+loss and minutes with any loss for the chosen range beside it, so a 1 % blip is
+easy to see.
 
 The **OPNsense Node** dashboard opens with the internet connection: current
-download and upload speed (with a sparkline), the peak and the total transferred
-in the chosen range, and a speed chart, then the same gateway status, RTT, jitter
-and loss panels as the Connectivity dashboard. Below that is the system section
-(adapted from grafana.com dashboard 19366), built on `os-node_exporter`, which adds per-interface packets, multicast, drops
-and errors, plus syscalls, forks and traps. It carries the same two instance
-pickers, and its **WAN Interface** and **LAN Interface** pickers take
-OPNsense's interface names (default `WAN` and `LAN`). The dashboard resolves
-those names to NIC devices (`ix0`, `vtnet1`, and so on) through the exporter's
-`opnsense_interfaces_*` metrics, so it needs both scrape targets. Its
-Temperature panel stays empty on a virtualized firewall, because the guest
-can't read the CPU's temperature sensors.
+download and upload speed (the last hour as a sparkline), the peak and the
+total transferred in the chosen range, and a speed chart. Below that are the
+same gateway status, RTT, jitter and loss panels as the Connectivity dashboard,
+filtered by its **Gateway** picker. The last section is adapted from
+grafana.com dashboard 19366 and built on `os-node_exporter`. It adds
+per-interface packets, multicast, drops and errors, plus syscalls, forks and
+traps. The dashboard carries the same two instance pickers, and its **WAN
+Interface** and **LAN Interface** pickers take OPNsense's interface names
+(default `WAN` and `LAN`). It resolves those names to NIC devices (`ix0`,
+`vtnet1`, and so on) through the exporter's `opnsense_interfaces_*` metrics,
+so it needs both scrape targets. A virtualized firewall can't read the CPU's
+temperature sensors, so the temperature panel shows the physical server's CPU
+temperature from an iDRAC exporter (`idrac_sensors_temperature`); without that
+metric it stays empty. The per-second panels need a scrape interval of 30 s or
+shorter.
+
 
 **EveBox is its own web UI, not a Grafana datasource.** It stores events in its
 own SQLite database and serves its own alert-triage interface on port 5636. No

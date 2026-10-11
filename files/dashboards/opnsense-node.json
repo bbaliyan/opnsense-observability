@@ -94,7 +94,8 @@
           "fields": "",
           "values": false
         }
-      }
+      },
+      "timeFrom": "1h"
     },
     {
       "id": 103,
@@ -156,7 +157,8 @@
           "fields": "",
           "values": false
         }
-      }
+      },
+      "timeFrom": "1h"
     },
     {
       "id": 104,
@@ -179,7 +181,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max_over_time((rate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[1m]) * 8)[$__range:1m])",
+          "expr": "max_over_time((rate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8)[$__range:1m])",
           "legendFormat": "",
           "refId": "A",
           "instant": true,
@@ -242,7 +244,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max_over_time((rate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[1m]) * 8)[$__range:1m])",
+          "expr": "max_over_time((rate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8)[$__range:1m])",
           "legendFormat": "",
           "refId": "A",
           "instant": true,
@@ -314,7 +316,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "bytes",
+          "unit": "decbytes",
           "mappings": [],
           "color": {
             "mode": "thresholds"
@@ -377,7 +379,7 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "bytes",
+          "unit": "decbytes",
           "mappings": [],
           "color": {
             "mode": "thresholds"
@@ -1076,64 +1078,12 @@
       "panels": []
     },
     {
+      "id": 17,
+      "type": "stat",
+      "title": "T640 CPU temperature",
       "datasource": {
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "continuous-GrYlRd"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 20,
-            "gradientMode": "scheme",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 3,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
       },
       "gridPos": {
         "x": 0,
@@ -1141,21 +1091,6 @@
         "w": 5,
         "h": 3
       },
-      "id": 17,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.1.1",
       "targets": [
         {
           "datasource": {
@@ -1163,14 +1098,54 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "node_cpu_temperature_celsius{instance=\"$node_instance\",cpu=\"0\"}",
-          "legendFormat": "{{cpu}}",
-          "range": true,
-          "refId": "A"
+          "expr": "idrac_sensors_temperature{name=~\"CPU[0-9]+ Temp\"}",
+          "legendFormat": "{{name}}",
+          "refId": "A",
+          "range": true
         }
       ],
-      "title": "Temperature",
-      "type": "timeseries"
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "wideLayout": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
     },
     {
       "datasource": {
