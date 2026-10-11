@@ -1,5 +1,5 @@
 # Full install: everything in minimal-values.yaml, plus Akvorado NetFlow
-# traffic analytics (Redpanda + ClickHouse + traffic dashboard) and EveBox
+# traffic analytics (Redpanda + ClickHouse + the NetFlow section of the Internet & Firewall dashboard) and EveBox
 # IDS alert triage. Point OPNsense's NetFlow export at the akvorado-inlet
 # Service and the IDS plugin's EVE syslog output at the evebox-syslog
 # Service — both published as LoadBalancers by this file. See the README's

@@ -55,7 +55,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[1m]) * 8",
+          "expr": "rate(node_network_receive_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8",
           "legendFormat": "",
           "refId": "A",
           "instant": true,
@@ -96,7 +96,7 @@
           "values": false
         }
       },
-      "description": "Internet download speed right now (average of the last minute), from the firewall's WAN port."
+      "description": "Internet download speed right now (average of the last two minutes), from the firewall's WAN port."
     },
     {
       "id": 103,
@@ -119,7 +119,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "rate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[1m]) * 8",
+          "expr": "rate(node_network_transmit_bytes_total{instance=\"$node_instance\",device=\"$wan_device\"}[2m]) * 8",
           "legendFormat": "",
           "refId": "A",
           "instant": true,
@@ -160,7 +160,7 @@
           "values": false
         }
       },
-      "description": "Internet upload speed right now (average of the last minute), from the firewall's WAN port."
+      "description": "Internet upload speed right now (average of the last two minutes), from the firewall's WAN port."
     },
     {
       "id": 108,
@@ -1414,13 +1414,14 @@
           "editorMode": "code",
           "expr": "opnsense_protocol_tcp_connection_count_by_state{opnsense_instance=\"$opnsense_instance\"} > 0",
           "legendFormat": "{{state}}",
-          "range": true,
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "title": "TCP Connection States",
       "type": "bargauge",
-      "description": "Connections the firewall is tracking, by TCP state. ESTABLISHED is normal traffic. Many TIME_WAIT means lots of short connections. SYN_SENT or SYN_RCVD piling up means connections that never complete: an upstream problem or a scan. States with no connections are hidden."
+      "description": "TCP connections on the firewall itself (its web interface, DNS, VPN and monitoring), by state, not the traffic it forwards for your devices. LISTEN is the services waiting for connections. A growing SYN_SENT means the firewall's own connections are failing, which points at an upstream problem. States with no connections are hidden."
     },
     {
       "datasource": {
@@ -1546,7 +1547,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\"}[1m]))",
+          "expr": "sum(rate(opnsense_firewall_in_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\"}[2m]))",
           "legendFormat": "Inbound",
           "refId": "A",
           "range": true
@@ -1557,7 +1558,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(opnsense_firewall_out_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\"}[1m]))",
+          "expr": "sum(rate(opnsense_firewall_out_ipv4_pass_packets{opnsense_instance=\"$opnsense_instance\"}[2m]))",
           "legendFormat": "Outbound",
           "refId": "B",
           "range": true
@@ -1691,7 +1692,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\"}[1m]))",
+          "expr": "sum(rate(opnsense_firewall_in_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\"}[2m]))",
           "legendFormat": "Inbound",
           "refId": "A",
           "range": true
@@ -1702,7 +1703,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(opnsense_firewall_out_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\"}[1m]))",
+          "expr": "sum(rate(opnsense_firewall_out_ipv4_block_packets{opnsense_instance=\"$opnsense_instance\"}[2m]))",
           "legendFormat": "Outbound",
           "refId": "B",
           "range": true
@@ -1710,7 +1711,7 @@
       ],
       "title": "Packets blocked per second",
       "type": "timeseries",
-      "description": "IPv4 packets per second the firewall blocks. On the internet side this is mostly background noise and scans. A sudden rise on the LAN side means a rule is stopping your own devices. Shown on its own scale because it is tiny next to passed traffic."
+      "description": "IPv4 packets per second the firewall blocks, across all interfaces. Mostly background noise and scans from the internet. A sudden rise can mean a rule is stopping your own devices: the table below shows which interface it is. Shown on its own scale because it is tiny next to passed traffic."
     },
     {
       "datasource": {

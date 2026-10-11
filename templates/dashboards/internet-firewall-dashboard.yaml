@@ -3,13 +3,14 @@
 {{- if .Values.akvorado.enabled }}
 {{- /* The NetFlow section goes in front of the Firewall row; everything from there down moves to make room. */}}
 {{- $n := .Files.Get "files/dashboards/netflow-section.json" | fromJson }}
-{{- $at := 0 }}
+{{- $at := -1 }}
 {{- range $d.panels }}
 {{- if and (eq .type "row") (eq .title "Firewall") }}{{ $at = int .gridPos.y }}{{ end }}
 {{- end }}
 {{- range $d.panels }}
 {{- if ge (int .gridPos.y) $at }}{{ $_ := set .gridPos "y" (add (int .gridPos.y) (int $n.height)) }}{{ end }}
 {{- end }}
+{{- if lt $at 0 }}{{ fail "the dashboard has no Firewall row to put the NetFlow section in front of" }}{{ end }}
 {{- range $n.panels }}{{ $_ := set .gridPos "y" (add (int .gridPos.y) $at) }}{{ end }}
 {{- $_ := set $d "panels" (concat $d.panels $n.panels) }}
 {{- $_ := set $d.templating "list" (append $d.templating.list $n.variable) }}

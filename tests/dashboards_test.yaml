@@ -104,6 +104,13 @@ tests:
       - notMatchRegex:
           path: data["internet-firewall.json"]
           pattern: ProtoName
+  - it: moves the Firewall row down by the height of the NetFlow section
+    set:
+      akvorado.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: '"y": 52\s*\},\s*"id": [0-9]+,\s*"panels": \[\],\s*"title": "Firewall"'
   - it: renders nothing when dashboards are disabled
     set:
       dashboards.enabled: false

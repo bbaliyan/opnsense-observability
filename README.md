@@ -60,7 +60,7 @@ It opens with the internet connection: the current download and upload speed
 next to a speed chart for the chosen range, then the peak and the total
 transferred in that range. Then come the gateways from the firewall's own
 dpinger monitoring (status, RTT, jitter and loss), the NetFlow traffic
-(destination countries, protocols, top devices and networks; only when
+(destination countries, protocols, top hosts and networks; only when
 `akvorado.enabled`), the firewall (service
 status, TCP connections by state, passed and blocked IPv4 packets, per-interface
 pass and block counts), and a system section adapted from grafana.com dashboard 19366

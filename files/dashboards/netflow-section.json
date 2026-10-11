@@ -139,7 +139,7 @@
     {
       "id": 203,
       "type": "table",
-      "title": "Top talkers (source IP)",
+      "title": "Top hosts (source IP)",
       "gridPos": {
         "x": 0,
         "y": 10,
@@ -163,7 +163,7 @@
           "rawSql": "SELECT replaceRegexpOne(IPv6NumToString(SrcAddr), '^::ffff:', '') AS source_ip, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY SrcAddr ORDER BY bytes DESC LIMIT 20"
         }
       ],
-      "description": "Devices that sent the most data in the selected time range."
+      "description": "Hosts, local or remote, that sent the most data in the selected time range. Downloads show up under the remote servers (CDNs and so on) that sent them."
     },
     {
       "id": 204,
