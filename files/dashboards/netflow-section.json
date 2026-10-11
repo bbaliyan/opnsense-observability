@@ -199,7 +199,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "continuous-blues"
+            "mode": "continuous-BlPu"
           },
           "unit": "decbytes"
         }
@@ -242,15 +242,18 @@
               "gazetteer": "public/gazetteer/countries.json"
             },
             "config": {
-              "size": {
-                "field": "bytes",
-                "min": 3,
-                "max": 25,
-                "fixed": 5
-              },
-              "color": {
-                "field": "bytes",
-                "fixed": "blue"
+              "style": {
+                "size": {
+                  "field": "bytes",
+                  "min": 5,
+                  "max": 30,
+                  "fixed": 8
+                },
+                "color": {
+                  "field": "bytes",
+                  "fixed": "blue"
+                },
+                "opacity": 0.85
               },
               "showLegend": true
             }
