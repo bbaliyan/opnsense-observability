@@ -1,0 +1,29 @@
+{{- if and .Values.akvorado.enabled .Values.akvorado.deviceNames.enabled .Values.opnsenseExporter.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "opnsense-observability.fullname" . }}-device-names-script
+  labels:
+    {{- include "opnsense-observability.labels" . | nindent 4 }}
+    app.kubernetes.io/component: device-names
+data:
+  sync.sh: |
+    #!/bin/sh
+    set -eu
+    CH="http://{{ include "opnsense-observability.fullname" . }}-clickhouse:8123"
+    FW="{{ .Values.opnsenseExporter.opnsense.protocol }}://{{ required "opnsenseExporter.opnsense.address is required" .Values.opnsenseExporter.opnsense.address }}"
+    TLS="{{ if .Values.opnsenseExporter.opnsense.insecureSkipVerify }}-k{{ end }}"
+
+    curl -sSf "$CH/" --data-binary "CREATE TABLE IF NOT EXISTS default.device_names (ip String, name String, mac String, updated DateTime DEFAULT now()) ENGINE = ReplacingMergeTree(updated) ORDER BY ip"
+
+    # shellcheck disable=SC2086
+    curl -sSf $TLS -u "$OPNSENSE_API_KEY:$OPNSENSE_API_SECRET" "$FW/api/dnsmasq/leases/search" -o /tmp/leases.json
+    grep -q '"rows"' /tmp/leases.json
+
+    # Leases without a hostname are stored with an empty name, so a reused IP never keeps the old name;
+    # the dashboard falls back to the IP. dnsmasq writes * for "no hostname".
+    curl -sSf "$CH/" \
+      --url-query "query=INSERT INTO default.device_names (ip, name, mac) SELECT JSONExtractString(r, 'address'), if(JSONExtractString(r, 'hostname') = '*', '', JSONExtractString(r, 'hostname')), JSONExtractString(r, 'hwaddr') FROM (SELECT arrayJoin(JSONExtractArrayRaw(doc, 'rows')) AS r FROM input('doc String')) WHERE JSONExtractString(r, 'address') != '' FORMAT JSONAsString" \
+      --data-binary @/tmp/leases.json
+    echo "device names synced: $(wc -c < /tmp/leases.json) bytes of leases"
+{{- end }}

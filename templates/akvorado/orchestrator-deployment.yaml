@@ -14,6 +14,8 @@ spec:
       app.kubernetes.io/component: akvorado-orchestrator
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/akvorado/configmap.yaml") . | sha256sum }}
       labels:
         {{- include "opnsense-observability.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: akvorado-orchestrator

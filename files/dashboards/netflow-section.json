@@ -1,17 +1,5 @@
 {
-  "height": 18,
-  "variable": {
-    "name": "DS_CLICKHOUSE",
-    "type": "datasource",
-    "query": "grafana-clickhouse-datasource",
-    "label": "ClickHouse (Akvorado)",
-    "refresh": 1,
-    "hide": 0,
-    "current": {},
-    "options": [],
-    "includeAll": false,
-    "multi": false
-  },
+  "height": 27,
   "panels": [
     {
       "id": 200,
@@ -27,12 +15,180 @@
       "panels": []
     },
     {
-      "id": 201,
-      "type": "geomap",
-      "title": "Traffic by destination country",
+      "id": 203,
+      "type": "table",
+      "title": "Internet usage by device",
       "gridPos": {
         "x": 0,
         "y": 1,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "queryType": "table",
+          "format": 1,
+          "rawSql": "WITH (a) -> (a BETWEEN toIPv6('::ffff:10.0.0.0') AND toIPv6('::ffff:10.255.255.255') OR a BETWEEN toIPv6('::ffff:172.16.0.0') AND toIPv6('::ffff:172.31.255.255') OR a BETWEEN toIPv6('::ffff:192.168.0.0') AND toIPv6('::ffff:192.168.255.255') OR a BETWEEN toIPv6('fc00::') AND toIPv6('fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff')) AS is_local, (a) -> NOT (is_local(a) OR a BETWEEN toIPv6('::ffff:0.0.0.0') AND toIPv6('::ffff:0.255.255.255') OR a BETWEEN toIPv6('::ffff:100.64.0.0') AND toIPv6('::ffff:100.127.255.255') OR a BETWEEN toIPv6('::ffff:127.0.0.0') AND toIPv6('::ffff:127.255.255.255') OR a BETWEEN toIPv6('::ffff:169.254.0.0') AND toIPv6('::ffff:169.254.255.255') OR a BETWEEN toIPv6('::ffff:224.0.0.0') AND toIPv6('::ffff:255.255.255.255') OR a BETWEEN toIPv6('fe80::') AND toIPv6('febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff') OR a >= toIPv6('ff00::') OR a = toIPv6('::')) AS is_internet, (SELECT topK(1)(SrcAddr)[1] FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND NOT is_local(SrcAddr) AND NOT is_local(DstAddr)) AS wan SELECT if(n.name != '', n.name, d.ip) AS device, d.ip AS ip, d.download AS download, d.upload AS upload, d.download + d.upload AS total, d.last_seen AS last_seen FROM (SELECT replaceRegexpOne(IPv6NumToString(if(is_local(SrcAddr), SrcAddr, DstAddr)), '^::ffff:', '') AS ip, sumIf(Bytes * SamplingRate, is_local(DstAddr)) AS download, sumIf(Bytes * SamplingRate, is_local(SrcAddr)) AS upload, max(TimeReceived) AS last_seen FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND is_local(SrcAddr) != is_local(DstAddr) AND is_internet(if(is_local(SrcAddr), DstAddr, SrcAddr)) AND if(is_local(SrcAddr), DstAddr, SrcAddr) != wan GROUP BY ip) AS d LEFT JOIN (SELECT ip, argMax(name, updated) AS name FROM default.device_names GROUP BY ip) AS n ON n.ip = d.ip ORDER BY total DESC LIMIT 50"
+        }
+      ],
+      "description": "Which devices on your network used the internet in the selected time range. Names come from the firewall's DHCP leases; devices without a name show their IP. Click a device to see where its traffic went. Traffic through the VPN pod is shown under old-monk. Flows are counted when they start; the newest minute or so may still be incomplete.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "download"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decbytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "upload"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decbytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "total"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decbytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last_seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsLocal"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "device"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Where did the traffic go?",
+                    "url": "?${__url_time_range}&var-device=${__data.fields.ip}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "total",
+            "desc": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 205,
+      "type": "timeseries",
+      "title": "Internet bandwidth by device",
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 12,
+        "h": 9
+      },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "custom": {
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "fillOpacity": 60,
+            "lineWidth": 1,
+            "drawStyle": "line",
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "queryType": "timeseries",
+          "format": 0,
+          "rawSql": "WITH (a) -> (a BETWEEN toIPv6('::ffff:10.0.0.0') AND toIPv6('::ffff:10.255.255.255') OR a BETWEEN toIPv6('::ffff:172.16.0.0') AND toIPv6('::ffff:172.31.255.255') OR a BETWEEN toIPv6('::ffff:192.168.0.0') AND toIPv6('::ffff:192.168.255.255') OR a BETWEEN toIPv6('fc00::') AND toIPv6('fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff')) AS is_local, (a) -> NOT (is_local(a) OR a BETWEEN toIPv6('::ffff:0.0.0.0') AND toIPv6('::ffff:0.255.255.255') OR a BETWEEN toIPv6('::ffff:100.64.0.0') AND toIPv6('::ffff:100.127.255.255') OR a BETWEEN toIPv6('::ffff:127.0.0.0') AND toIPv6('::ffff:127.255.255.255') OR a BETWEEN toIPv6('::ffff:169.254.0.0') AND toIPv6('::ffff:169.254.255.255') OR a BETWEEN toIPv6('::ffff:224.0.0.0') AND toIPv6('::ffff:255.255.255.255') OR a BETWEEN toIPv6('fe80::') AND toIPv6('febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff') OR a >= toIPv6('ff00::') OR a = toIPv6('::')) AS is_internet, (SELECT topK(1)(SrcAddr)[1] FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND NOT is_local(SrcAddr) AND NOT is_local(DstAddr)) AS wan SELECT t.time AS time, if(t.ip = 'other', 'other', if(n.name != '', concat(n.name, ' (', t.ip, ')'), t.ip)) AS metric, t.bps AS bps FROM (SELECT time, if(ip IN (SELECT replaceRegexpOne(IPv6NumToString(if(is_local(SrcAddr), SrcAddr, DstAddr)), '^::ffff:', '') FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND is_local(SrcAddr) != is_local(DstAddr) AND is_internet(if(is_local(SrcAddr), DstAddr, SrcAddr)) AND if(is_local(SrcAddr), DstAddr, SrcAddr) != wan GROUP BY 1 ORDER BY sum(Bytes * SamplingRate) DESC LIMIT 8), ip, 'other') AS ip, sum(b) * 8 / greatest(60, $__interval_s) AS bps FROM (SELECT toStartOfInterval(TimeReceived, INTERVAL greatest(60, $__interval_s) SECOND) AS time, replaceRegexpOne(IPv6NumToString(if(is_local(SrcAddr), SrcAddr, DstAddr)), '^::ffff:', '') AS ip, Bytes * SamplingRate AS b FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND is_local(SrcAddr) != is_local(DstAddr) AND is_internet(if(is_local(SrcAddr), DstAddr, SrcAddr)) AND if(is_local(SrcAddr), DstAddr, SrcAddr) != wan) GROUP BY time, ip) AS t LEFT JOIN (SELECT ip, argMax(name, updated) AS name FROM default.device_names GROUP BY ip) AS n ON n.ip = t.ip ORDER BY time"
+        }
+      ],
+      "description": "Internet speed of the 8 busiest devices over time, stacked, with everything else under 'other'. Zoom into a spike, then look at the device table. Flows are counted when they start; the newest minute or so may still be incomplete.",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "calcs": [
+            "mean",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 201,
+      "type": "geomap",
+      "title": "Traffic by country",
+      "gridPos": {
+        "x": 0,
+        "y": 10,
         "w": 12,
         "h": 9
       },
@@ -58,7 +214,7 @@
           "editorType": "sql",
           "queryType": "table",
           "format": 1,
-          "rawSql": "SELECT DstCountry AS lookup, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY DstCountry ORDER BY bytes DESC"
+          "rawSql": "WITH (a) -> (a BETWEEN toIPv6('::ffff:10.0.0.0') AND toIPv6('::ffff:10.255.255.255') OR a BETWEEN toIPv6('::ffff:172.16.0.0') AND toIPv6('::ffff:172.31.255.255') OR a BETWEEN toIPv6('::ffff:192.168.0.0') AND toIPv6('::ffff:192.168.255.255') OR a BETWEEN toIPv6('fc00::') AND toIPv6('fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff')) AS is_local, (a) -> NOT (is_local(a) OR a BETWEEN toIPv6('::ffff:0.0.0.0') AND toIPv6('::ffff:0.255.255.255') OR a BETWEEN toIPv6('::ffff:100.64.0.0') AND toIPv6('::ffff:100.127.255.255') OR a BETWEEN toIPv6('::ffff:127.0.0.0') AND toIPv6('::ffff:127.255.255.255') OR a BETWEEN toIPv6('::ffff:169.254.0.0') AND toIPv6('::ffff:169.254.255.255') OR a BETWEEN toIPv6('::ffff:224.0.0.0') AND toIPv6('::ffff:255.255.255.255') OR a BETWEEN toIPv6('fe80::') AND toIPv6('febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff') OR a >= toIPv6('ff00::') OR a = toIPv6('::')) AS is_internet, (SELECT topK(1)(SrcAddr)[1] FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND NOT is_local(SrcAddr) AND NOT is_local(DstAddr)) AS wan SELECT if(is_local(SrcAddr), DstCountry, SrcCountry) AS lookup, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND is_local(SrcAddr) != is_local(DstAddr) AND is_internet(if(is_local(SrcAddr), DstAddr, SrcAddr)) AND if(is_local(SrcAddr), DstAddr, SrcAddr) != wan GROUP BY lookup ORDER BY bytes DESC"
         }
       ],
       "options": {
@@ -101,7 +257,7 @@
           }
         ]
       },
-      "description": "Where your internet traffic goes, by destination country, from NetFlow."
+      "description": "Where your internet traffic goes or comes from, by remote country, from NetFlow. Traffic between local devices is left out. Flows are counted when they start; the newest minute or so may still be incomplete."
     },
     {
       "id": 202,
@@ -109,7 +265,7 @@
       "title": "Traffic by protocol",
       "gridPos": {
         "x": 12,
-        "y": 1,
+        "y": 10,
         "w": 12,
         "h": 9
       },
@@ -132,64 +288,18 @@
           "editorType": "sql",
           "queryType": "timeseries",
           "format": 0,
-          "rawSql": "SELECT toStartOfInterval(TimeReceived, INTERVAL 1 minute) AS time, dictGetOrDefault('default.protocols', 'name', toUInt8(Proto), toString(Proto)) AS metric, sum(Bytes * SamplingRate) / 60 AS bytes_per_sec FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY time, metric ORDER BY time"
+          "rawSql": "WITH (a) -> (a BETWEEN toIPv6('::ffff:10.0.0.0') AND toIPv6('::ffff:10.255.255.255') OR a BETWEEN toIPv6('::ffff:172.16.0.0') AND toIPv6('::ffff:172.31.255.255') OR a BETWEEN toIPv6('::ffff:192.168.0.0') AND toIPv6('::ffff:192.168.255.255') OR a BETWEEN toIPv6('fc00::') AND toIPv6('fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff')) AS is_local, (a) -> NOT (is_local(a) OR a BETWEEN toIPv6('::ffff:0.0.0.0') AND toIPv6('::ffff:0.255.255.255') OR a BETWEEN toIPv6('::ffff:100.64.0.0') AND toIPv6('::ffff:100.127.255.255') OR a BETWEEN toIPv6('::ffff:127.0.0.0') AND toIPv6('::ffff:127.255.255.255') OR a BETWEEN toIPv6('::ffff:169.254.0.0') AND toIPv6('::ffff:169.254.255.255') OR a BETWEEN toIPv6('::ffff:224.0.0.0') AND toIPv6('::ffff:255.255.255.255') OR a BETWEEN toIPv6('fe80::') AND toIPv6('febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff') OR a >= toIPv6('ff00::') OR a = toIPv6('::')) AS is_internet, (SELECT topK(1)(SrcAddr)[1] FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND NOT is_local(SrcAddr) AND NOT is_local(DstAddr)) AS wan SELECT toStartOfInterval(TimeReceived, INTERVAL greatest(60, $__interval_s) SECOND) AS time, dictGetOrDefault('default.protocols', 'name', toUInt8(Proto), toString(Proto)) AS metric, sum(Bytes * SamplingRate) / greatest(60, $__interval_s) AS bytes_per_sec FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND is_local(SrcAddr) != is_local(DstAddr) AND is_internet(if(is_local(SrcAddr), DstAddr, SrcAddr)) AND if(is_local(SrcAddr), DstAddr, SrcAddr) != wan GROUP BY time, metric ORDER BY time"
         }
       ],
-      "description": "Internet traffic by protocol over the selected time range, from NetFlow."
-    },
-    {
-      "id": 203,
-      "type": "table",
-      "title": "Top hosts (source IP)",
-      "gridPos": {
-        "x": 0,
-        "y": 10,
-        "w": 12,
-        "h": 8
-      },
-      "datasource": {
-        "type": "grafana-clickhouse-datasource",
-        "uid": "${DS_CLICKHOUSE}"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "grafana-clickhouse-datasource",
-            "uid": "${DS_CLICKHOUSE}"
-          },
-          "editorType": "sql",
-          "queryType": "table",
-          "format": 1,
-          "rawSql": "SELECT replaceRegexpOne(IPv6NumToString(SrcAddr), '^::ffff:', '') AS source_ip, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY SrcAddr ORDER BY bytes DESC LIMIT 20"
-        }
-      ],
-      "description": "Hosts, local or remote, that sent the most data in the selected time range. Downloads show up under the remote servers (CDNs and so on) that sent them.",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "bytes"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "decbytes"
-              }
-            ]
-          }
-        ]
-      }
+      "description": "Internet traffic by protocol over the selected time range, from NetFlow. Traffic between local devices is left out. Flows are counted when they start; the newest minute or so may still be incomplete."
     },
     {
       "id": 204,
       "type": "table",
-      "title": "Top destination ASNs",
+      "title": "Top remote networks (ASNs)",
       "gridPos": {
-        "x": 12,
-        "y": 10,
+        "x": 0,
+        "y": 19,
         "w": 12,
         "h": 8
       },
@@ -207,10 +317,10 @@
           "editorType": "sql",
           "queryType": "table",
           "format": 1,
-          "rawSql": "SELECT DstAS AS asn, if(DstAS = 0, 'Private or unknown (local traffic)', dictGetOrDefault('default.asns', 'name', DstAS, '')) AS name, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime GROUP BY DstAS ORDER BY bytes DESC LIMIT 20"
+          "rawSql": "WITH (a) -> (a BETWEEN toIPv6('::ffff:10.0.0.0') AND toIPv6('::ffff:10.255.255.255') OR a BETWEEN toIPv6('::ffff:172.16.0.0') AND toIPv6('::ffff:172.31.255.255') OR a BETWEEN toIPv6('::ffff:192.168.0.0') AND toIPv6('::ffff:192.168.255.255') OR a BETWEEN toIPv6('fc00::') AND toIPv6('fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff')) AS is_local, (a) -> NOT (is_local(a) OR a BETWEEN toIPv6('::ffff:0.0.0.0') AND toIPv6('::ffff:0.255.255.255') OR a BETWEEN toIPv6('::ffff:100.64.0.0') AND toIPv6('::ffff:100.127.255.255') OR a BETWEEN toIPv6('::ffff:127.0.0.0') AND toIPv6('::ffff:127.255.255.255') OR a BETWEEN toIPv6('::ffff:169.254.0.0') AND toIPv6('::ffff:169.254.255.255') OR a BETWEEN toIPv6('::ffff:224.0.0.0') AND toIPv6('::ffff:255.255.255.255') OR a BETWEEN toIPv6('fe80::') AND toIPv6('febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff') OR a >= toIPv6('ff00::') OR a = toIPv6('::')) AS is_internet, (SELECT topK(1)(SrcAddr)[1] FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND NOT is_local(SrcAddr) AND NOT is_local(DstAddr)) AS wan SELECT if(is_local(SrcAddr), DstAS, SrcAS) AS asn, if(asn = 0, 'Unknown network', dictGetOrDefault('default.asns', 'name', asn, '')) AS name, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND is_local(SrcAddr) != is_local(DstAddr) AND is_internet(if(is_local(SrcAddr), DstAddr, SrcAddr)) AND if(is_local(SrcAddr), DstAddr, SrcAddr) != wan GROUP BY asn ORDER BY bytes DESC LIMIT 20"
         }
       ],
-      "description": "Networks (autonomous systems) that received the most data in the selected time range. ASN 0 is traffic with no known network: mostly local and Tailscale addresses.",
+      "description": "Networks (autonomous systems) your internet traffic went to or came from in the selected time range. Unknown network means the address is in no known network database. Flows are counted when they start; the newest minute or so may still be incomplete.",
       "fieldConfig": {
         "defaults": {},
         "overrides": [
@@ -228,6 +338,84 @@
           }
         ]
       }
+    },
+    {
+      "id": 206,
+      "type": "table",
+      "title": "Where the traffic went",
+      "gridPos": {
+        "x": 12,
+        "y": 19,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "${DS_CLICKHOUSE}"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "${DS_CLICKHOUSE}"
+          },
+          "editorType": "sql",
+          "queryType": "table",
+          "format": 1,
+          "rawSql": "WITH (a) -> (a BETWEEN toIPv6('::ffff:10.0.0.0') AND toIPv6('::ffff:10.255.255.255') OR a BETWEEN toIPv6('::ffff:172.16.0.0') AND toIPv6('::ffff:172.31.255.255') OR a BETWEEN toIPv6('::ffff:192.168.0.0') AND toIPv6('::ffff:192.168.255.255') OR a BETWEEN toIPv6('fc00::') AND toIPv6('fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff')) AS is_local, (a) -> NOT (is_local(a) OR a BETWEEN toIPv6('::ffff:0.0.0.0') AND toIPv6('::ffff:0.255.255.255') OR a BETWEEN toIPv6('::ffff:100.64.0.0') AND toIPv6('::ffff:100.127.255.255') OR a BETWEEN toIPv6('::ffff:127.0.0.0') AND toIPv6('::ffff:127.255.255.255') OR a BETWEEN toIPv6('::ffff:169.254.0.0') AND toIPv6('::ffff:169.254.255.255') OR a BETWEEN toIPv6('::ffff:224.0.0.0') AND toIPv6('::ffff:255.255.255.255') OR a BETWEEN toIPv6('fe80::') AND toIPv6('febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff') OR a >= toIPv6('ff00::') OR a = toIPv6('::')) AS is_internet, (SELECT topK(1)(SrcAddr)[1] FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND NOT is_local(SrcAddr) AND NOT is_local(DstAddr)) AS wan SELECT dictGetOrDefault('default.asns', 'name', if(is_local(SrcAddr), DstAS, SrcAS), '') AS network, if(is_local(SrcAddr), DstCountry, SrcCountry) AS country, dictGetOrDefault('default.protocols', 'name', toUInt8(Proto), toString(Proto)) AS protocol, if(is_local(SrcAddr), DstPort, SrcPort) AS port, sum(Bytes * SamplingRate) AS bytes FROM flows WHERE TimeReceived >= $__fromTime AND TimeReceived <= $__toTime AND is_local(SrcAddr) != is_local(DstAddr) AND is_internet(if(is_local(SrcAddr), DstAddr, SrcAddr)) AND if(is_local(SrcAddr), DstAddr, SrcAddr) != wan AND (${device:sqlstring} = '' OR replaceRegexpOne(IPv6NumToString(if(is_local(SrcAddr), SrcAddr, DstAddr)), '^::ffff:', '') = ${device:sqlstring}) GROUP BY network, country, protocol, port ORDER BY bytes DESC LIMIT 20"
+        }
+      ],
+      "description": "The remote networks, countries and ports used in the selected time range, for the device chosen in the table (or all devices if none is chosen). Clear the Device filter at the top to see all. Flows are counted when they start; the newest minute or so may still be incomplete.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "bytes"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "decbytes"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "variables": [
+    {
+      "name": "DS_CLICKHOUSE",
+      "type": "datasource",
+      "query": "grafana-clickhouse-datasource",
+      "label": "ClickHouse (Akvorado)",
+      "refresh": 1,
+      "hide": 0,
+      "current": {},
+      "options": [],
+      "includeAll": false,
+      "multi": false
+    },
+    {
+      "name": "device",
+      "label": "Device (IP)",
+      "type": "textbox",
+      "query": "",
+      "current": {
+        "text": "",
+        "value": ""
+      },
+      "options": [
+        {
+          "selected": true,
+          "text": "",
+          "value": ""
+        }
+      ],
+      "hide": 0
     }
   ]
 }

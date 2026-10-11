@@ -228,9 +228,20 @@ Only relevant with `akvorado.enabled: true`.
 
 1. Install the chart, then find the inlet's address:
    `kubectl get svc <release>-akvorado-inlet -o wide`
-2. **Reporting → Netflow**: enable capture, select **WAN** (and **LAN** too if
-   you want internal-to-internal visibility), set **Netflow version** to **v9**,
+2. **Reporting → Netflow**: enable capture and select **LAN** (required: the
+   per-device panels read the devices' own addresses, which the WAN side has
+   already translated). Select **WAN** too and tick it under **WAN interfaces**
+   so translated traffic is not counted twice. Set **Netflow version** to **v9**,
    and set the target to the inlet address on port `2055`.
+3. Still on **Reporting → Netflow** (tick **Advanced**), set **Active Timeout**
+   to `60`. The default of `1800` makes OPNsense hold a long flow for up to 30
+   minutes before exporting it, so the dashboard shows traffic that late. The
+   chart stamps each flow with the time it began
+   (`akvorado.netflow.timestampSource`), but a flow lasting 30 minutes still
+   lands in its first minute unless the timeout is short. Leave **Inactive
+   Timeout** at `15`.
+4. For device names, give the API user the dnsmasq **Leases** privilege (see
+   *Device names* below).
 
 ### 6. Suricata EVE syslog output
 
@@ -326,6 +337,14 @@ single-node ClickHouse.
   datasource pointed at the `<release>-clickhouse` Service on port `9000`. This
   chart does not provision Grafana datasources, so add one through your Grafana
   provisioning of choice.
+- **Device names.** The per-device panels show a device's DHCP hostname. A
+  CronJob (`akvorado.deviceNames.enabled: true`) reads the leases from OPNsense's dnsmasq API
+  every 5 minutes into the ClickHouse table `default.device_names`, using the
+  same API credentials as the exporter. That API user needs the dnsmasq
+  **Leases** privilege (System → Access → Users → the user → Effective
+  Privileges). Devices without a hostname show their IP. Names are looked up when
+  the dashboard loads, so old traffic gets the latest name for its IP. Traffic of
+  everything behind the VPN pod is credited to the node running it.
 - By default Akvorado asks the exporter for interface names over SNMP. A firewall
   that doesn't answer SNMP (OPNsense doesn't by default) makes the metadata
   provider give up, and every flow is then dropped. Set `akvorado.outlet.extraConfig`
@@ -393,6 +412,9 @@ Start from one of the shipped examples:
 | `akvorado.enabled` | Turn on the NetFlow traffic-analytics pipeline (Redpanda + ClickHouse + Akvorado orchestrator/inlet/outlet/console). Default `false`. |
 | `akvorado.netflow.listenPort` | UDP port the inlet listens on for NetFlow records. |
 | `akvorado.netflow.serviceType` | Service type for the inlet's NetFlow listener; `LoadBalancer` so OPNsense on the LAN can reach it. |
+| `akvorado.netflow.timestampSource` | Which time stamps a flow: `netflow-first-switched` (default, when it began), `netflow-packet` or `udp` (when the export arrived). |
+| `akvorado.deviceNames.enabled` | Sync DHCP leases from OPNsense into ClickHouse so the device panels show names. Default `false`; needs OPNsense dnsmasq DHCP and the Leases privilege on the API user. |
+| `akvorado.deviceNames.schedule` | Cron schedule of the lease sync. Default every 5 minutes. |
 | `akvorado.kafka.brokers` | External Kafka broker list; empty (default) uses the bundled Redpanda's internal listener. |
 | `akvorado.clickhouse.persistence.size` | PVC size for the vendored single-node ClickHouse StatefulSet. |
 | `akvorado.outlet.extraConfig` | Map merged into Akvorado's outlet configuration, e.g. a static `metadata` provider for an exporter that doesn't answer SNMP. Keys set here are merged over the chart's own `geoip` block. |

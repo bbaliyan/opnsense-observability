@@ -97,20 +97,39 @@ tests:
           pattern: 'sum\(Bytes \* SamplingRate\)'
       - matchRegex:
           path: data["internet-firewall.json"]
-          pattern: 'DstCountry AS lookup'
+          pattern: 'DstCountry, SrcCountry\) AS lookup'
       - matchRegex:
           path: data["internet-firewall.json"]
           pattern: '"gazetteer": "public/gazetteer/countries.json"'
       - notMatchRegex:
           path: data["internet-firewall.json"]
           pattern: ProtoName
+  - it: shows internet usage per device and counts each byte once
+    set:
+      akvorado.enabled: true
+    asserts:
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: 'Internet usage by device'
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: 'Internet bandwidth by device'
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: 'default.device_names'
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: 'is_local\(SrcAddr\) != is_local\(DstAddr\)'
+      - matchRegex:
+          path: data["internet-firewall.json"]
+          pattern: '"name": "device"'
   - it: moves the Firewall row down by the height of the NetFlow section
     set:
       akvorado.enabled: true
     asserts:
       - matchRegex:
           path: data["internet-firewall.json"]
-          pattern: '"y": 52\s*\},\s*"id": [0-9]+,\s*"panels": \[\],\s*"title": "Firewall"'
+          pattern: '"y": 61\s*\},\s*"id": [0-9]+,\s*"panels": \[\],\s*"title": "Firewall"'
   - it: renders nothing when dashboards are disabled
     set:
       dashboards.enabled: false

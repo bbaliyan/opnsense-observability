@@ -36,6 +36,7 @@ data:
           decoder: netflow
           listen: :{{ .Values.akvorado.netflow.listenPort }}
           workers: 2
+          timestamp-source: {{ .Values.akvorado.netflow.timestampSource }}
   outlet.yaml: |
     ---
 {{- $outlet := mustMergeOverwrite (dict "geoip" (dict "optional" true "asn-database" (list "/usr/share/GeoIP/dbip-asn-lite.mmdb") "geo-database" (list "/usr/share/GeoIP/dbip-country-lite.mmdb"))) (deepCopy (.Values.akvorado.outlet.extraConfig | default dict)) }}
