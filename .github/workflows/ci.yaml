@@ -1,3 +1,5 @@
+# Setup only. Every check lives in the Makefile; make lint-pipelines fails
+# this file if it ever runs one.
 name: CI
 
 on:
@@ -5,65 +7,31 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
 jobs:
-  lint-test:
+  commit:
     runs-on: ubuntu-latest
+    container: ghcr.io/bbaliyan/kube-devenv:0.10.0
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - run: make test-commit BASE_REF=${{ github.event.pull_request.base.sha || github.event.before }}
 
-      - uses: azure/setup-helm@v4
+  integration:
+    needs: commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
         with:
           version: v4.2.4
-
-      - name: Add redpanda repo
-        run: helm repo add redpanda https://charts.redpanda.com
-
-      - name: Install helm-unittest
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
-
-      - name: Run helm-unittest
-        run: helm unittest .
-
-      - uses: helm/chart-testing-action@v2
-
-      - name: Run ct lint
-        run: ct lint --config ct.yaml
-
-      - name: Create kind cluster
-        uses: helm/kind-action@v1
-
-      - name: Install Prometheus Operator CRDs
-        run: |
-          kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
-          kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_probes.yaml
-          kubectl apply --server-side -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
-
-      - name: Apply CI fixture secret
-        run: kubectl apply -f ci/core-secret.yaml
-
-      - name: helm dependency update
-        run: helm dependency update .
-
-      - name: Install chart
-        run: |
-          helm install opnsense-observability-ci . \
-            -f ci/core-values.yaml \
-            --wait --timeout 5m
-
-      - name: Verify pods are ready
-        run: kubectl get pods -o wide && kubectl wait --for=condition=Ready pod --all --timeout=60s
-
-      - name: Install chart with full feature set enabled
-        run: |
-          helm upgrade opnsense-observability-ci . \
-            -f ci/core-values.yaml \
-            -f ci/full-values.yaml \
-            --wait --timeout 8m
-
-      - name: Verify full-install pods are ready
-        run: |
-          kubectl get pods -o wide
-          kubectl wait --for=condition=Ready pod --all --timeout=120s \
-            --field-selector=status.phase!=Succeeded
+      - uses: helm/kind-action@1544676c07bb3570fcb70166beaa07c4528fd4aa # v1.15.1
+      - run: make test-integration
