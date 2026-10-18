@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Automerge: GitHub Actions updates follow the shared preset (grouped patch PRs merge once checks pass), because they only touch CI. Image tags and chart dependencies in values.yaml and Chart.yaml ship in the released chart, so those PRs never automerge and a person reviews each one.",
+  "extends": [
+    "local>bbaliyan/renovate-config"
+  ],
+  "enabledManagers": [
+    "github-actions",
+    "helmv3",
+    "helm-values"
+  ],
+  "packageRules": [
+    {
+      "description": "Anything that ships in the released chart is reviewed by hand. Kept out of the shared 'patch updates' group so the preset's automerge cannot carry it along.",
+      "matchManagers": [
+        "helmv3",
+        "helm-values"
+      ],
+      "groupName": "released chart patch updates",
+      "groupSlug": "released-chart-patch-updates",
+      "automerge": false
+    }
+  ]
+}
