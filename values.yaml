@@ -95,7 +95,7 @@ akvorado:
     schedule: "*/5 * * * *"
     image:
       repository: curlimages/curl
-      tag: "8.11.1"
+      tag: "8.23.0"
   geoip:
     enabled: true               # auto-download DB-IP Lite .mmdb files
     source: dbip-lite            # dbip-lite (default, no account) | maxmind
@@ -122,7 +122,7 @@ evebox:
   enabled: false
   image:
     repository: jasonish/evebox
-    tag: "0.28.0"
+    tag: "0.31.0"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP
@@ -130,7 +130,7 @@ evebox:
   syslog:
     image:
       repository: timberio/vector
-      tag: "0.44.0-alpine"
+      tag: "0.59.0-alpine"
       pullPolicy: IfNotPresent
     service:
       # The web UI runs with authentication disabled, so it stays on the
