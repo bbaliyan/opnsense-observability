@@ -37,6 +37,7 @@ ct-lint: repo
 
 lint-pipelines:
 	$(CHECKS)/pipeline-lint.sh .
+	tests/check-gitlab-ci.sh
 
 secrets:
 	$(CHECKS)/secrets.sh .

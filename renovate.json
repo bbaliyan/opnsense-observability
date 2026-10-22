@@ -6,6 +6,7 @@
   ],
   "enabledManagers": [
     "github-actions",
+    "gitlabci",
     "helmv3",
     "helm-values"
   ]
