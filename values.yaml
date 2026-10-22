@@ -95,7 +95,7 @@ akvorado:
     schedule: "*/5 * * * *"
     image:
       repository: curlimages/curl
-      tag: "8.11.1"
+      tag: "8.23.0"
   geoip:
     enabled: true               # auto-download DB-IP Lite .mmdb files
     source: dbip-lite            # dbip-lite (default, no account) | maxmind
