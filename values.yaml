@@ -122,7 +122,7 @@ evebox:
   enabled: false
   image:
     repository: jasonish/evebox
-    tag: "0.28.0"
+    tag: "0.31.0"
     pullPolicy: IfNotPresent
   service:
     type: ClusterIP

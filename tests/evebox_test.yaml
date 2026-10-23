@@ -30,14 +30,17 @@ tests:
     asserts:
       - hasDocuments:
           count: 0
-  - it: renders a Deployment with the pinned EveBox image and SQLite args
+  - it: renders a Deployment with the image from values and SQLite args
     template: evebox/deployment.yaml
+    set:
+      evebox.image.repository: example.test/evebox
+      evebox.image.tag: "9.9.9"
     asserts:
       - isKind:
           of: Deployment
       - equal:
           path: spec.template.spec.containers[0].image
-          value: jasonish/evebox:0.28.0
+          value: example.test/evebox:9.9.9
       - equal:
           path: spec.template.spec.containers[0].args
           value: ["--sqlite", "--no-auth", "--no-tls", "--host", "0.0.0.0", "--port", "5636", "-D", "/var/lib/evebox", "--input", "/var/lib/evebox/spool/eve.json"]
