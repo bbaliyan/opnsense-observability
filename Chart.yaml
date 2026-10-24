@@ -15,6 +15,6 @@ keywords:
   - grafana
 dependencies:
   - name: redpanda
-    version: "26.2.4"
+    version: "26.2.5"
     repository: https://charts.redpanda.com
     condition: akvorado.enabled
