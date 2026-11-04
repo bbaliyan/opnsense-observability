@@ -10,14 +10,16 @@ set:
   opnsenseExporter.opnsense.apiSecretSecretRef.name: "opnsense-api"
   opnsenseExporter.opnsense.apiSecretSecretRef.key: "api-secret"
 tests:
-  - it: renders a Deployment with the pinned image and correct flags
+  - it: renders a Deployment with the configured image and correct flags
     template: opnsense-exporter/deployment.yaml
+    set:
+      opnsenseExporter.image.tag: "9.9.9"
     asserts:
       - isKind:
           of: Deployment
       - equal:
           path: spec.template.spec.containers[0].image
-          value: ghcr.io/athennamind/opnsense-exporter:0.0.16
+          value: ghcr.io/athennamind/opnsense-exporter:9.9.9
       - contains:
           path: spec.template.spec.containers[0].args
           content: --opnsense.address=192.168.1.1
