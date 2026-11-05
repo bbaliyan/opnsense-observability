@@ -12,7 +12,7 @@ opnsenseExporter:
   enabled: true
   image:
     repository: ghcr.io/athennamind/opnsense-exporter
-    tag: "0.0.16"
+    tag: "0.0.19"
     pullPolicy: IfNotPresent
   opnsense:
     protocol: https
